@@ -2,7 +2,6 @@ import matplotlib
 matplotlib.use('Agg')
 from matplotlib import pyplot as plt
 import matplotlib.animation as animation
-
 import numpy as np
 import glob, sys
 
@@ -47,11 +46,11 @@ def getXYsliceFrom3Ddata(nx, ny, z, data):
 		xy2DsliceYdata.append(yLinexy2DsliceYdatadata)
 	return [xy2DsliceXdata, xy2DsliceYdata]	
 	
-def animate(i, nx, ny, z, dataFiles, ax, fig):
+def animate(i, z, dataFiles, ax, fig):
 	ax.clear()
 	data = read3DdataFromFile(dataFiles[i])
 	dataInfo = readInfoDataFromFile(dataFiles[i])
-	[xy2DsliceXdata, xy2DsliceYdata ] = getXYsliceFrom3Ddata(nx, ny, z, data)
+	[xy2DsliceXdata, xy2DsliceYdata ] = getXYsliceFrom3Ddata(dataInfo["xnodes"], dataInfo["ynodes"], z, data)
 	ax.quiver(xy2DsliceXdata, xy2DsliceYdata)
 	ax.legend()
 	plt.title("{}, iteracja: {}".format(dataInfo["Title"], i))
@@ -64,12 +63,12 @@ def animate(i, nx, ny, z, dataFiles, ax, fig):
 	plt.xlabel("{} [{}]".format("x", "m"))
 	"""
 	
-def drow2DsliceOfVectorField(strRegExMatchingFiles, nx, ny, z):
+def drow2DsliceOfVectorField(strRegExMatchingFiles, z):
 	dataFiles = glob.glob(strRegExMatchingFiles);
 	print len(dataFiles)
 	for dataFile in dataFiles:
 		data = read3DdataFromFile(dataFile)	
-		[xy2DsliceXdata, xy2DsliceYdata ] = getXYsliceFrom3Ddata(nx, ny, z, data)
+		[xy2DsliceXdata, xy2DsliceYdata ] = getXYsliceFrom3Ddata(z, data)
 		fig, ax = plt.subplots()
 		ax.quiver(xy2DsliceXdata, xy2DsliceYdata)
 		file = dataFile[:-4]
@@ -77,15 +76,13 @@ def drow2DsliceOfVectorField(strRegExMatchingFiles, nx, ny, z):
 		plt.close()
 		
 	fig, ax = plt.subplots()
-	ani = animation.FuncAnimation(fig, animate, interval=1000, fargs=(ny, nx, z, dataFiles, ax, fig))
+	ani = animation.FuncAnimation(fig, animate, interval=1000, fargs=(z, dataFiles, ax, fig))
 	ani.save("ABCD2.mp4")
 	plt.close()
 	
-NX=35
-NY=35
 Z=2
 #sys.argv[1]
-drow2DsliceOfVectorField("/net/scratch/people/plgwojciechjak/jednaBariera/freeAniz_20000_myfree_0.5000_mxfree_0.8660_mxtop_1_VProfileType_6_Voltage_0.1500_/*.ovf", NX, NY, Z)
+drow2DsliceOfVectorField("/net/scratch/people/plgwojciechjak/jednaBariera/freeAniz_20000_myfree_0.5000_mxfree_0.8660_mxtop_1_VProfileType_6_Voltage_0.1500_/*.ovf", Z)
 
 print readInfoDataFromFile("/net/scratch/people/plgwojciechjak/jednaBariera/freeAniz_20000_myfree_0.5000_mxfree_0.8660_mxtop_1_VProfileType_6_Voltage_0.1500_/"
 	"jednaBariera-Oxs_TimeDriver-Magnetization-00-0000020.omf")
