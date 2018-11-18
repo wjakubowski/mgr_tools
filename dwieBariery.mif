@@ -1,0 +1,291 @@
+# MIF 2.2
+# Created with MAGE tool
+Parameter Voltage 
+Parameter freeAniz 
+Parameter output_file 
+Parameter mtop
+Parameter mfree
+Parameter mbottom
+Parameter stoppingTime 5e-9
+Parameter timeStep 1e-13
+Parameter scheduleStep
+Parameter magnetizationScheduleStep
+Parameter VProfileType
+
+proc EllipseZ { x y z } {
+set r1 [expr 2.*$x -1. ]
+set r2 [expr 2.*$y -1. ]
+set r [expr {sqrt($r1*$r1+$r2*$r2)}]
+if {$r>1.0} {return 0}
+return 1
+}
+
+SetOptions [subst {
+ basename "${output_file}"
+ scalar_output_format %.17g
+ scalar_field_output_format {binary 8}
+ scalar_field_output_meshtype rectangular
+ vector_field_output_format {text %e}
+ scalar_output_format %.17g
+ vector_field_output_meshtype rectangular
+} ]
+
+Specify Oxs_ScriptAtlas:top {
+xrange {0e-9 70e-9}
+yrange {0e-9 70e-9}
+zrange {2.5e-9 3.0e-9}
+regions {top emptytop}
+script_args { relpt }
+script EllipseZ
+}
+
+Specify Oxs_ScriptAtlas:spacer_top {
+xrange {0e-9 70e-9}
+yrange {0e-9 70e-9}
+zrange {2.0e-9 2.5e-9}
+regions {spacer_top emptyspacer_top}
+script_args { relpt }
+script EllipseZ
+}
+
+Specify Oxs_ScriptAtlas:free {
+xrange {0e-9 70e-9}
+yrange {0e-9 70e-9}
+zrange {1.0e-9 2.0e-9}
+regions {free emptyfree}
+script_args { relpt }
+script EllipseZ
+}
+
+Specify Oxs_ScriptAtlas:spacer_bottom {
+xrange {0e-9 70e-9}
+yrange {0e-9 70e-9}
+zrange {0.5e-9 1.0e-9}
+regions {spacer_bottom emptyspacer_bottom}
+script_args { relpt }
+script EllipseZ
+}
+
+Specify Oxs_ScriptAtlas:bottom {
+xrange {0e-9 70e-9}
+yrange {0e-9 70e-9}
+zrange {0e-9 0.5e-9}
+regions {bottom emptybottom}
+script_args { relpt }
+script EllipseZ
+}
+
+Specify Oxs_MultiAtlas:multiatlas1 {
+
+atlas top 
+atlas spacer_top 
+atlas free 
+atlas spacer_bottom 
+atlas bottom
+} 
+
+Specify Oxs_LinearScalarField:zheight {
+ norm 1.0
+ vector {0 0 1}
+ offset 0
+}
+
+
+Specify Oxs_UniaxialAnisotropy:PMA [subst {
+K1 { Oxs_AtlasScalarField {
+ atlas :multiatlas1
+ default_value 0
+ values {
+ top 100e3
+ free $freeAniz
+ bottom 100e3
+}
+}}
+ axis { Oxs_AtlasVectorField {
+ atlas :multiatlas1
+ default_value { 1 0 0 }
+ values {
+ top { 1 0 0 }
+ free { 1 0 0 }
+ bottom { 1 0 0 }
+}
+}}
+}]
+
+Specify Oxs_Exchange6Ngbr:Exchange {
+ default_A 0
+ atlas :multiatlas1
+ A {
+ top top 13e-12
+ free free 13e-12
+ bottom bottom 13e-12
+ }
+}
+
+Specify Oxs_Demag {}
+
+
+Specify Oxs_RectangularMesh:mesh {
+ cellsize { 2e-09 2e-09 5e-10 }
+ atlas multiatlas1
+}
+
+proc MVoltage { total_time } {
+	global stoppingTime
+	global Voltage
+	global VProfileType
+	if {$VProfileType == 0} {
+		if {$total_time < $stoppingTime/5} {
+			return 0 
+		}
+		return $Voltage
+	}
+	
+	if {$VProfileType == 1} {
+		if {$total_time < $stoppingTime/5} {
+			return 0 
+		}
+		if {$total_time < 2*$stoppingTime/5} {
+			return $Voltage
+		}
+		if {$total_time < 3*$stoppingTime/5} {
+			return 0
+		}
+		if {$total_time < 4*$stoppingTime/5} {
+			return -$Voltage
+		}
+		return 0
+	}
+	
+	if {$VProfileType == 2} {
+		return [ expr 2*$Voltage*$total_time/$stoppingTime ]
+	}
+	
+	if {$VProfileType == 3} {
+		if {$total_time < $stoppingTime/5} {
+			return [ expr 2*$Voltage*($total_time/$stoppingTime*5) ]
+		}
+		if {$total_time < $stoppingTime*(3./5)} {
+			return [ expr 2*$Voltage*(2-$total_time/$stoppingTime*5) ]
+		}
+		if {$total_time < $stoppingTime*(4./5)} {
+			return [ expr 2*$Voltage*(-4+$total_time/$stoppingTime*5) ]
+		}
+		return 0
+	}
+	
+	if {$VProfileType == 4} {
+		if {$total_time < $stoppingTime*(2./5)} {
+			return [ expr 2*$Voltage*($total_time/$stoppingTime*(5./2)) ]
+		}
+		if {$total_time < $stoppingTime*(4./5)} {
+			return [ expr 2*$Voltage*(1-$total_time/$stoppingTime*(5./2)) ]
+		}
+		return 0
+	}
+
+	return $Voltage
+}
+
+Specify MF_CurrentFlowEvolver [subst {
+  do_precess 1
+  gamma_LL 2.21e5
+  method rkf54s
+  alpha 0.022
+  min_timestep $timeStep
+  max_timestep $timeStep
+  
+  ABCD 1234
+  numer_of_barier 2
+
+  current_mode 0.0
+
+  signal_profile MVoltage
+  signal_profile_args total_time
+
+ 
+ 
+ Interfaces {
+ Inter_top_down {
+  atlas :multiatlas1
+  region top
+  scalarfield :zheight
+  scalarvalue 2.5e-9
+  scalarside +
+ }
+ Inter_free_up {
+  atlas :multiatlas1
+  region free
+  scalarfield :zheight
+  scalarvalue 2.0e-9
+  scalarside -
+ }
+ Inter_free_down {
+  atlas :multiatlas1
+  region free
+  scalarfield :zheight
+  scalarvalue 1.0e-9
+  scalarside +
+ }
+ Inter_bottom_up {
+  atlas :multiatlas1
+  region bottom
+  scalarfield :zheight
+  scalarvalue 0.5e-9
+  scalarside -
+ }
+ }
+ 
+ Links {
+ L1 {
+	interface1 Inter_top_down
+	interface2 Inter_free_up
+	bJ0	0.0
+	bJ1	0.0
+	bJ2 0.0
+	eta0  0.7
+	R_P 100
+	R_AP 200
+	}
+ L2 {
+	interface1 Inter_free_down
+	interface2 Inter_bottom_up
+	bJ0	0.0
+	bJ1	0.0
+	bJ2 0.0
+	eta0  0.7
+	R_P 120
+	R_AP 240
+	}
+ }
+
+} ]
+
+
+Specify Oxs_TimeDriver [subst {
+ Ms { Oxs_AtlasScalarField {
+ atlas multiatlas1
+ default_value 0
+ values {
+top 1000e3
+free 1000e3
+bottom 1000e3
+}}}
+ m0 { Oxs_AtlasVectorField {
+ atlas multiatlas1
+ default_value { 1 0 0 }
+ values {
+top { $mtop 0 0 }
+free { $mfree 0 0 }
+bottom { $mbottom 0 0 }
+}}}
+ evolver MF_CurrentFlowEvolver
+ mesh mesh
+ stopping_time $stoppingTime
+} ]
+
+Destination archive mmArchive
+
+Schedule DataTable archive step $scheduleStep
+Schedule MF_CurrentFlowEvolver::Spin_torque archive step $magnetizationScheduleStep
+Schedule Oxs_TimeDriver::Magnetization archive step $magnetizationScheduleStep

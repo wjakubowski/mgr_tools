@@ -1,0 +1,13 @@
+{
+	"freeAniz":				{"value":20e3, "precision": 0, "type": "value", "verbous": true},
+	"mtop":					{"value":-1, "precision": 0, "type": "value", "verbous": true},
+	"mfree":				{"value":1, "precision": 0, "type": "value", "verbous": true},
+	"mbottom":				{"value":1, "precision": 0, "type": "value", "verbous": true},
+	"VProfileType":			{"value":1, "precision": 0, "type": "value", "verbous": true},
+	"Voltage":				{"value":"[f for f in utils.frange(0.15, 0.151, 0.03)]", "precision": 4, "type": "script", "verbous": true},
+	
+	"stoppingTime":			{"value":2e-12, "type": "value", "verbous": false},
+	"timeStep":				{"value":1e-13, "type": "value", "verbous": false},
+	"scheduleStep":			{"value":1, "type": "value", "verbous": false},
+	"magnetizationScheduleStep":	{"value":1, "type": "value", "verbous": false}
+}

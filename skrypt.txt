@@ -1,0 +1,43 @@
+#!/bin/bash
+#SBATCH -J {}
+#SBATCH -N 1
+#SBATCH --ntasks-per-node=4
+#SBATCH --time=1:00:00
+#SBATCH -A grant009
+#SBATCH -p plgrid-testing
+#SBATCH --output={}/skrypt_output.txt
+#SBATCH --error={}/skrypt_error.txt
+
+
+mif_file={}
+odt_output_file={}
+mif_parameters="{}"
+
+
+echo "Bash starting script"
+echo "mif file:"
+echo $mif_file
+echo "output odt file:"
+echo $odt_output_file
+echo "mif parameters:"
+echo $mif_parameters
+echo 
+
+rm -f $odt_output_file.odt
+date
+module load plgrid/tools/tcltk/8.5.19-threads
+module load plgrid/tools/intel/16.0.3
+module load plgrid/libs/mkl/11.3.1
+touch $odt_output_file.odt
+chgrp -R plggspinsym $odt_output_file.odt
+
+export MKL_HOME=
+/usr/bin/tclsh {} boxsi \
+	$mif_file -threads 4 -parameters "$mif_parameters"
+	
+module load plgrid/libs/python-numpy
+module load plgrid/tools/ffmpeg
+
+python {}/plotCharts.py {} {}
+
+date
