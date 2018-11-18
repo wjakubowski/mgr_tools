@@ -2,9 +2,9 @@
 #SBATCH -J {}
 #SBATCH -N 1
 #SBATCH --ntasks-per-node=4
-#SBATCH --time=1:00:00
-#SBATCH -A grant009
-#SBATCH -p plgrid-testing
+#SBATCH --time={maxSimulationTime}
+#SBATCH -A {grant}
+#SBATCH -p {partition}
 #SBATCH --output={}/skrypt_output.txt
 #SBATCH --error={}/skrypt_error.txt
 

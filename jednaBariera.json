@@ -1,13 +1,24 @@
 {
-	"freeAniz":						{"value":20e3, "precision": 0, "type": "value", "verbous": true},
-	"mxtop":						{"value":1, "precision": 0, "type": "value", "verbous": true},
-	"mxfree":						{"value":"[math.sqrt(3)/2]", "precision": 4, "type": "script", "verbous": true},
-	"myfree":						{"value":0.5, "precision": 4, "type": "value", "verbous": true},
-	"VProfileType":					{"value":6, "precision": 0, "type": "value", "verbous": true},
-	"Voltage":						{"value":0.15, "precision": 4, "type": "value", "verbous": true},
-			
-	"stoppingTime":					{"value":2e-12, "type": "value", "verbous": false},
-	"timeStep":						{"value":1e-13, "type": "value", "verbous": false},
-	"scheduleStep":					{"value":1, "type": "value", "verbous": false},
-	"magnetizationScheduleStep":	{"value":1, "type": "value", "verbous": false}
+	"symulation":{
+		"oommfPath":"/net/scratch/people/plgwojciechjak/OOMMF-SWAG/oommf.tcl",
+		"grant":"grant009",
+		"partition":"plgrid-testing",
+		"maxSimulationTime":"1:00:00",
+		"mifParameters":{
+			"freeAniz":						{"value":20e3, "precision": 0, "type": "value", "verbous": true},
+			"mxtop":						{"value":1, "precision": 0, "type": "value", "verbous": true},
+			"mxfree":						{"value":"[math.sqrt(3)/2]", "precision": 4, "type": "script", "verbous": true},
+			"myfree":						{"value":0.5, "precision": 4, "type": "value", "verbous": true},
+			"VProfileType":					{"value":6, "precision": 0, "type": "value", "verbous": true},
+			"Voltage":						{"value":0.15, "precision": 4, "type": "value", "verbous": true},
+					
+			"stoppingTime":					{"value":2e-12, "type": "value", "verbous": false},
+			"timeStep":						{"value":1e-13, "type": "value", "verbous": false},
+			"scheduleStep":					{"value":1, "type": "value", "verbous": false},
+			"magnetizationScheduleStep":	{"value":1, "type": "value", "verbous": false}
+		}
+	},
+	"plot":{
+		
+	}
 }

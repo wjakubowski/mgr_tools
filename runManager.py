@@ -29,17 +29,22 @@ def createParamSuitsFromParamRanges(paramRanges):
 symulationName = sys.argv[1]
 symulationDirectory = "./"+symulationName
 
-oommfPath = "/net/scratch/people/plgwojciechjak/OOMMF-SWAG/oommf.tcl"
 thisScritDirPath = os.getcwd()
 
-config_file = symulationName + ".json"
-config_file_str = open(config_file).read()
-config_file_json = json.loads(config_file_str)
+configFile = symulationName + ".json"
+configFileStr = open(configFile).read()
+configFileJson = json.loads(configFileStr)
 
+symulationConfig = configFileJson["symulation"]
+oommfPath = symulationConfig["oommfPath"]
+grant = symulationConfig["grant"]
+partition = symulationConfig["partition"]
+maxSimulationTime = symulationConfig["maxSimulationTime"]
+symulationParameters = symulationConfig["mifParameters"]
 verbousParams = []
 silentParams = []
 
-for paramName, paramProperties in config_file_json.iteritems():
+for paramName, paramProperties in symulationParameters.iteritems():
 	#exec(paramName+" = "+str(paramProperties["value"]))
 	if(paramProperties["verbous"]):
 		if(paramProperties["type"] == "value"):
@@ -84,8 +89,10 @@ for parameters in symulParamGrid:
 	parametersPathElement = ""
 	mifParametersStr = ""
 	for i in range(len(verbousParams)):
-		parametersPathElement += "{}_{}_".format(verbousParams[i][0], format(parameters[i], '.{}f'.format(verbousParams[i][2])))
-		mifParametersStr += "{} {} ".format(verbousParams[i][0],parameters[i])
+		parametersPathElement += "{paramName}_{formatedParamValue}_".format(\
+										paramName = verbousParams[i][0],\
+										formatedParamValue = format(parameters[i], '.{paramPrecision}f'.format(paramPrecision = verbousParams[i][2])))
+		mifParametersStr += "{paramName} {paramValue} ".format(paramName = verbousParams[i][0], paramValue = parameters[i])
 	currentWorkDir = "{}/{}".format(symulationDirectory, parametersPathElement)
 	outputOdtFilePath = "{}/{}".format(currentWorkDir, symulationName)
 	mifParametersStr += "{} {} ".format("output_file", outputOdtFilePath)
@@ -98,13 +105,13 @@ for parameters in symulParamGrid:
 	except:
 		pass
 
-	scriptPath = '{}/skrypt.sh'.format(currentWorkDir, mifFilePath, outputOdtFilePath, mifParametersStr)
+	scriptPath = '{}/skrypt.sh'.format(currentWorkDir)
 	with open(scriptPath,'w') as f:
 		f.write(scriptStr.format(parametersPathElement, currentWorkDir, currentWorkDir, mifFilePath, outputOdtFilePath, \
-			mifParametersStr, oommfPath, thisScritDirPath, parametersPathElement, symulationName))
+			mifParametersStr, oommfPath, thisScritDirPath, parametersPathElement, symulationName, grant = grant, partition = partition, maxSimulationTime = maxSimulationTime))
 	
 	shutil.copy(mifFilePath, "{}/{}".format(currentWorkDir, symulationName+".mif"))
-	shutil.copy(config_file, "{}/{}".format(currentWorkDir, symulationName+".json"))
+	shutil.copy(configFile, "{}/{}".format(currentWorkDir, symulationName+".json"))
 			
 	command = "sbatch {} ".format(scriptPath)
 	print "\nTerminal command:\n", command , '\n'
