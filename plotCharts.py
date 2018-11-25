@@ -1,5 +1,4 @@
 import os, re, sys
-import utils
 from copy import copy
 import numpy as np
 

@@ -1,5 +1,4 @@
 {
-	"freeAniz":				{"value":20e3, "precision": 0, "type": "value", "verbous": true},
 	"mtop":					{"value":-1, "precision": 0, "type": "value", "verbous": true},
 	"mfree":				{"value":1, "precision": 0, "type": "value", "verbous": true},
 	"mbottom":				{"value":1, "precision": 0, "type": "value", "verbous": true},

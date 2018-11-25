@@ -1,7 +1,7 @@
 # MIF 2.2
 # Created with MAGE tool
 Parameter Voltage 
-Parameter freeAniz 
+Parameter freeAniz 20000
 Parameter output_file 
 Parameter mxtop
 Parameter mytop 0

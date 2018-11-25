@@ -5,7 +5,6 @@
 		"partition":"plgrid-testing",
 		"maxSimulationTime":"1:00:00",
 		"mifParameters":{
-			"freeAniz":						{"value":20e3, "precision": 0, "type": "value", "verbous": true},
 			"mxtop":						{"value":1, "precision": 0, "type": "value", "verbous": true},
 			"mxfree":						{"value":"[math.sqrt(3)/2]", "precision": 4, "type": "script", "verbous": true},
 			"myfree":						{"value":0.5, "precision": 4, "type": "value", "verbous": true},
