@@ -77,7 +77,7 @@ def drowAllMatched2DvectorFields(dataFileMatcher, z, outputDir):
 		plt.savefig(outputDir+"/"+file+".png")
 		plt.close()
 	
-def animate2DvectoField(i, z, dataFiles, ax, fig):
+def animate2DvectorField(i, z, dataFiles, ax, fig):
 	ax.clear()
 	data = read3DdataFromFile(dataFiles[i])
 	dataInfo = readInfoDataFromFile(dataFiles[i])
@@ -87,22 +87,25 @@ def animate2DvectoField(i, z, dataFiles, ax, fig):
 def makeAnimation(dataFileMatcher, z, outputFile):
 	fig, ax = plt.subplots()
 	dataFiles = glob.glob(dataFileMatcher)
-	ani = animation.FuncAnimation(fig, animate2DvectoField, interval=1000, fargs=(z, dataFiles, ax, fig))
+	dataFiles.sort()
+	ani = animation.FuncAnimation(fig, animate2DvectorField, interval=300, fargs=(z, dataFiles, ax, fig))
 	ani.save(outputFile)
 	plt.close()
 	
-z=1
-
-# print readInfoDataFromFile("example_vector_output.omf")
-
-dataFiles = glob.glob("./example_vector_output.omf");
-data = read3DdataFromFile(dataFiles[0])	
-dataInfo = readInfoDataFromFile(dataFiles[0])
-[xy2DsliceXdata, xy2DsliceYdata] = getXYsliceFrom3Ddata(int(dataInfo["xnodes"]), int(dataInfo["ynodes"]), z, data)
-fig, ax = plt.subplots()
-drow2DvectorField(fig, ax, xy2DsliceXdata, xy2DsliceYdata, dataInfo)
-plt.savefig("zdzisek.png")
-
-makeAnimation("/net/archive/groups/plggspinsym/WJ/jednaBariera/myfree_0.5000_mxfree_0.8660_mxtop_1_VProfileType_6_Voltage_0.1500_/*.omf", z, "marian.mp4")
-
-# drowAllMatched2DvectorFields("/net/archive/groups/plggspinsym/WJ/jednaBariera/myfree_0.5000_mxfree_0.8660_mxtop_1_VProfileType_6_Voltage_0.1500_/*.omf", z, "./xxx")
+	
+if __name__ == "__main__":
+	z=1
+	##################
+	print readInfoDataFromFile("example_vector_output.omf")
+	##################
+	dataFiles = glob.glob("./example_vector_output.omf");
+	data = read3DdataFromFile(dataFiles[0])	
+	dataInfo = readInfoDataFromFile(dataFiles[0])
+	[xy2DsliceXdata, xy2DsliceYdata] = getXYsliceFrom3Ddata(int(dataInfo["xnodes"]), int(dataInfo["ynodes"]), z, data)
+	fig, ax = plt.subplots()
+	drow2DvectorField(fig, ax, xy2DsliceXdata, xy2DsliceYdata, dataInfo)
+	plt.savefig("zdzisek.png")
+	##################
+	makeAnimation("/net/archive/groups/plggspinsym/WJ/jednaBariera/myfree_0.5000_mxfree_0.8660_mxtop_1_VProfileType_6_Voltage_0.1500_/*.omf", z, "marian.mp4")
+	##################
+	drowAllMatched2DvectorFields("/net/archive/groups/plggspinsym/WJ/jednaBariera/myfree_0.5000_mxfree_0.8660_mxtop_1_VProfileType_6_Voltage_0.1500_/*.omf", z, "./xxx")

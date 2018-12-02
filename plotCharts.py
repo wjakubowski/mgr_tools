@@ -1,12 +1,16 @@
 import os, re, sys
 from copy import copy
 import numpy as np
+import json
 
 import matplotlib
 matplotlib.use('Agg')
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.animation as animation
+
+from plot2DvectorField import makeAnimation as makeAnimation
+from plot2DvectorField import drowAllMatched2DvectorFields as drowAllMatched2DvectorFields
 
 def getColumnWithHeader(odtFileName, header):
 	with open(odtFileName) as odtFile:
@@ -51,7 +55,7 @@ def drowFunctionOfVariables(odtFileName, variableNameX, variableNameY, outputFil
 
 def animate(i, x, y, z, ax, fig):
 	ax.clear()
-	ax.plot(x[:i*100], y[:i*100], z[:i*100])
+	ax.plot(x[:i], y[:i], z[:i])
 	ax.legend()
 	plt.xlabel("{} [1]".format("mx"))
 	plt.ylabel("{} [1]".format("my"))
@@ -78,9 +82,9 @@ def drowTrajectory(odtFileName, outputFile):
 		ax.clear()
 		ax.plot(x, y, z)
 		ax.legend()
-		plt.xlabel("{} [{}]".format("mx",xUnit))
-		plt.ylabel("{} [{}]".format("my",yUnit))
-		ax.set_zlabel("{} [{}]".format("mz",zUnit))
+		plt.xlabel("{} [{}]".format(xLabel,xUnit))
+		plt.ylabel("{} [{}]".format(yLabel,yUnit))
+		ax.set_zlabel("{} [{}]".format(zLabel,zUnit))
 		plt.savefig(outputFile+".png")
 		plt.close()
 	
@@ -91,12 +95,12 @@ def drowTrajectory(odtFileName, outputFile):
 		plt.close()
 
 thisScritDirPath = os.getcwd()
-symulationName = sys.argv[1]
-outputDataDirName = sys.argv[2]
-plotsFileNameSufix = outputDataDirName
-outputDataDirPath = thisScritDirPath+"/"+outputDataDirName+"/"+symulationName
-outputPlotsDirPath = thisScritDirPath+"/plots/"+outputDataDirName+"/"+symulationName
-outputDataOdtFilePath = outputDataDirPath+"/"+outputDataDirName+".odt"
+parametersPathElement = sys.argv[1]
+symulationName = sys.argv[2]
+plotsFileNameSufix = symulationName
+outputDataDirPath = thisScritDirPath+"/"+symulationName+"/"+parametersPathElement
+outputPlotsDirPath = thisScritDirPath+"/plots/"+symulationName+"/"+parametersPathElement
+outputDataOdtFilePath = outputDataDirPath+"/"+symulationName+".odt"
 
 try:
 	os.makedirs(outputPlotsDirPath)
@@ -109,6 +113,34 @@ drowFunctionOfVariables(outputDataOdtFilePath, "Simulation time", "mx" , "{}/mag
 drowTrajectory(outputDataOdtFilePath, "{}/trajektoria_m_{}".format(outputPlotsDirPath, plotsFileNameSufix))
 drowFunctionOfVariables(outputDataOdtFilePath, "Signal", "total resistance" , "{}/opor_napiecie_{}.png".format(outputPlotsDirPath, plotsFileNameSufix))
 
-	
+configFile = symulationName + ".json"
+configFileStr = open(configFile).read()
+configFileJson = json.loads(configFileStr)
 
+plotConfig = configFileJson["plot"]
+z=int(plotConfig["zSlice"])
+
+try:
+	os.makedirs(outputPlotsDirPath+"/magnetization")
+except:
+	pass
+	
+try:
+	os.makedirs(outputPlotsDirPath+"/spin_torque")
+except:
+	pass
+	
+drowAllMatched2DvectorFields(outputDataDirPath+"/*.omf", z, outputPlotsDirPath+"/magnetization")
+
+try:
+	makeAnimation(outputDataDirPath+"/*.omf", z, outputPlotsDirPath+"/magnetization.mp4")
+except IndexError:
+	pass
+
+drowAllMatched2DvectorFields(outputDataDirPath+"/*.ovf", z, outputPlotsDirPath+"/spin_torque")
+	
+try:
+	makeAnimation(outputDataDirPath+"/*.ovf", z, outputPlotsDirPath+"/spin_torque.mp4")
+except IndexError:
+	pass
 	
