@@ -4,12 +4,13 @@ Parameter Voltage
 Parameter freeAniz 20000
 Parameter output_file 
 Parameter mtop
-Parameter mfree
+Parameter mxfree
+Parameter myfree 0
 Parameter mbottom
 Parameter stoppingTime 5e-9
 Parameter timeStep 1e-13
 Parameter scheduleStep
-Parameter magnetizationScheduleStep
+Parameter vecFieldScheduleStep
 Parameter VProfileType
 
 proc EllipseZ { x y z } {
@@ -96,9 +97,9 @@ K1 { Oxs_AtlasScalarField {
  atlas :multiatlas1
  default_value 0
  values {
- top 100e3
+ top 500e3
  free $freeAniz
- bottom 100e3
+ bottom 500e3
 }
 }}
  axis { Oxs_AtlasVectorField {
@@ -203,8 +204,6 @@ Specify MF_CurrentFlowEvolver [subst {
   signal_profile MVoltage
   signal_profile_args total_time
 
- 
- 
  Interfaces {
  Inter_top_down {
   atlas :multiatlas1
@@ -276,7 +275,7 @@ bottom 1000e3
  default_value { 1 0 0 }
  values {
 top { $mtop 0 0 }
-free { $mfree 0 0 }
+free { $mxfree $mxfree 0 }
 bottom { $mbottom 0 0 }
 }}}
  evolver MF_CurrentFlowEvolver
@@ -287,5 +286,5 @@ bottom { $mbottom 0 0 }
 Destination archive mmArchive
 
 Schedule DataTable archive step $scheduleStep
-Schedule MF_CurrentFlowEvolver::Spin_torque archive step $magnetizationScheduleStep
-Schedule Oxs_TimeDriver::Magnetization archive step $magnetizationScheduleStep
+Schedule MF_CurrentFlowEvolver::Spin_torque archive step $vecFieldScheduleStep
+Schedule Oxs_TimeDriver::Magnetization archive step $vecFieldScheduleStep

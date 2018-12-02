@@ -3,14 +3,13 @@
 Parameter Voltage 
 Parameter freeAniz 20000
 Parameter output_file 
-Parameter mxtop
-Parameter mytop 0
+Parameter mtop
 Parameter mxfree
 Parameter myfree 0
 Parameter stoppingTime 5e-9
 Parameter timeStep 1e-13
 Parameter scheduleStep
-Parameter magnetizationScheduleStep
+Parameter vecFieldScheduleStep
 Parameter VProfileType
 
 proc EllipseZ { x y z } {
@@ -144,11 +143,11 @@ proc MVoltage { total_time } {
 		if {$total_time < $stoppingTime/5} {
 			return [ expr 2*$Voltage*($total_time/$stoppingTime*5) ]
 		}
-		if {$total_time < 2*$stoppingTime/5} {
+		if {$total_time < $stoppingTime*(3./5)} {
 			return [ expr 2*$Voltage*(2-$total_time/$stoppingTime*5) ]
 		}
-		if {$total_time < 4*$stoppingTime/5} {
-			return [ expr 2*$Voltage*(-2+$total_time/$stoppingTime*5) ]
+		if {$total_time < $stoppingTime*(4./5)} {
+			return [ expr 2*$Voltage*(-4+$total_time/$stoppingTime*5) ]
 		}
 		return 0
 	}
@@ -166,7 +165,6 @@ proc MVoltage { total_time } {
 	return $Voltage
 }
 
-
 Specify MF_CurrentFlowEvolver [subst {
   do_precess 1
   gamma_LL 2.21e5
@@ -183,7 +181,6 @@ Specify MF_CurrentFlowEvolver [subst {
   signal_profile MVoltage
   signal_profile_args total_time
 
- 
  Interfaces {
  Inter_top_down {
   atlas :multiatlas1
@@ -229,7 +226,7 @@ free 1000e3
  atlas multiatlas1
  default_value { 1 0 0 }
  values {
-top { $mxtop $mytop 0 }
+top { $mtop 0 0 }
 free { $mxfree $myfree 0 }
 }}}
  evolver MF_CurrentFlowEvolver
@@ -240,5 +237,5 @@ free { $mxfree $myfree 0 }
 Destination archive mmArchive
 
 Schedule DataTable archive step $scheduleStep
-Schedule MF_CurrentFlowEvolver::Spin_torque archive step $magnetizationScheduleStep
-Schedule Oxs_TimeDriver::Magnetization archive step $magnetizationScheduleStep
+Schedule MF_CurrentFlowEvolver::Spin_torque archive step $vecFieldScheduleStep
+Schedule Oxs_TimeDriver::Magnetization archive step $vecFieldScheduleStep
