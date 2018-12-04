@@ -1,43 +1,32 @@
 #!/bin/bash
-#SBATCH -J {}
+#SBATCH -J {parametersPathElement}
 #SBATCH -N 1
 #SBATCH --ntasks-per-node=4
 #SBATCH --time={maxSimulationTime}
 #SBATCH -A {grant}
 #SBATCH -p {partition}
-#SBATCH --output={}/skrypt_output.txt
-#SBATCH --error={}/skrypt_error.txt
+#SBATCH --output={currentWorkDir}/skrypt_output.txt
+#SBATCH --error={currentWorkDir}/skrypt_error.txt
 
+if {doSymulation}; then
+	rm -f ${outputOdtFilePath}
+	module load plgrid/tools/tcltk/8.5.19-threads
+	module load plgrid/tools/intel/16.0.3
+	module load plgrid/libs/mkl/11.3.1
+	touch ${outputOdtFilePath}
+	chgrp -R plggspinsym ${outputOdtFilePath}
 
-mif_file={}
-odt_output_file={}
-mif_parameters="{}"
-
-
-echo "Bash starting script"
-echo "mif file:"
-echo $mif_file
-echo "output odt file:"
-echo $odt_output_file
-echo "mif parameters:"
-echo $mif_parameters
-echo 
-
-rm -f $odt_output_file.odt
-date
-module load plgrid/tools/tcltk/8.5.19-threads
-module load plgrid/tools/intel/16.0.3
-module load plgrid/libs/mkl/11.3.1
-touch $odt_output_file.odt
-chgrp -R plggspinsym $odt_output_file.odt
-
-export MKL_HOME=
-/usr/bin/tclsh {} boxsi \
-	$mif_file -threads 4 -parameters "$mif_parameters"
+	export MKL_HOME=
+	/usr/bin/tclsh {oommfPath} boxsi \
+		${mifFilePath} -threads 4 -parameters "${mifParametersStr}"
+fi
 	
-module load plgrid/libs/python-numpy
-module load plgrid/tools/ffmpeg
+if {doPloting}; then
+	module load plgrid/libs/python-numpy
+	module load plgrid/tools/ffmpeg
+	# module load plgrid/tools/imagemagick
+	python {thisScritDirPath}/plotCharts.py {parametersPathElement} {symulationName}
+fi
 
-python {}/plotCharts.py {} {}
-
+echo "script finished:";
 date

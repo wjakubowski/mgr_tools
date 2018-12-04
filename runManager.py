@@ -36,6 +36,11 @@ configFileStr = open(configFile).read()
 configFileJson = json.loads(configFileStr)
 
 symulationConfig = configFileJson["symulation"]
+plotConfig = configFileJson["plot"]
+
+doPloting = "true" if plotConfig["doPloting"]  else "false"
+
+doSymulation = "true" if symulationConfig["doSymulation"] else "false"
 oommfPath = symulationConfig["oommfPath"]
 grant = symulationConfig["grant"]
 partition = symulationConfig["partition"]
@@ -94,7 +99,7 @@ for parameters in symulParamGrid:
 										formatedParamValue = format(parameters[i], '.{paramPrecision}f'.format(paramPrecision = verbousParams[i][2])))
 		mifParametersStr += "{paramName} {paramValue} ".format(paramName = verbousParams[i][0], paramValue = parameters[i])
 	currentWorkDir = "{}/{}".format(symulationDirectory, parametersPathElement)
-	outputOdtFilePath = "{}/{}".format(currentWorkDir, symulationName)
+	outputOdtFilePath = "{}/{}.odt".format(currentWorkDir, symulationName)
 	mifParametersStr += "{} {} ".format("output_file", outputOdtFilePath)
 	
 	for i in range(len(silentParams)):
@@ -107,8 +112,9 @@ for parameters in symulParamGrid:
 
 	scriptPath = '{}/skrypt.sh'.format(currentWorkDir)
 	with open(scriptPath,'w') as f:
-		f.write(scriptStr.format(parametersPathElement, currentWorkDir, currentWorkDir, mifFilePath, outputOdtFilePath, \
-			mifParametersStr, oommfPath, thisScritDirPath, parametersPathElement, symulationName, grant = grant, partition = partition, maxSimulationTime = maxSimulationTime))
+		f.write(scriptStr.format(parametersPathElement=parametersPathElement, currentWorkDir=currentWorkDir, mifFilePath=mifFilePath, outputOdtFilePath=outputOdtFilePath, \
+			mifParametersStr = mifParametersStr, oommfPath=oommfPath, thisScritDirPath=thisScritDirPath, symulationName=symulationName, \
+			doSymulation = doSymulation, doPloting = doPloting, grant = grant, partition = partition, maxSimulationTime = maxSimulationTime))
 	
 	shutil.copy(mifFilePath, "{}/{}".format(currentWorkDir, symulationName+".mif"))
 	shutil.copy(configFile, "{}/{}".format(currentWorkDir, symulationName+".json"))

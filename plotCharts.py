@@ -62,7 +62,7 @@ def animate(i, x, y, z, ax, fig):
 	ax.set_zlabel("{} [1]".format("mz"))
 
 		
-def drowTrajectory(odtFileName, outputFile):
+def drowTrajectory(odtFileName, outputFile, framesPerSecond):
 	with open(odtFileName) as odtFile:
 		x = []
 		y = []
@@ -90,8 +90,8 @@ def drowTrajectory(odtFileName, outputFile):
 	
 		fig = plt.figure()
 		ax = fig.gca(projection='3d')
-		ani = animation.FuncAnimation(fig, animate, interval=100, fargs=(x, y, z, ax, fig))
-		ani.save(outputFile+".mp4")
+		ani = animation.FuncAnimation(fig, animate , frames = len(x), fargs = (x, y, z, ax, fig))
+		ani.save(outputFile+".mp4", fps=framesPerSecond)
 		plt.close()
 
 thisScritDirPath = os.getcwd()
@@ -106,39 +106,37 @@ try:
 	os.makedirs(outputPlotsDirPath)
 except:
 	pass
-
-drowFunctionOfVariables(outputDataOdtFilePath, "Simulation time", "Signal" , "{}/napiecie_{}.png".format(outputPlotsDirPath, plotsFileNameSufix))
-drowFunctionOfVariables(outputDataOdtFilePath, "Simulation time", "total resistance" , "{}/opor_{}.png".format(outputPlotsDirPath, plotsFileNameSufix))
-drowFunctionOfVariables(outputDataOdtFilePath, "Simulation time", "mx" , "{}/magnetyzacja_mx_{}.png".format(outputPlotsDirPath, plotsFileNameSufix))
-drowTrajectory(outputDataOdtFilePath, "{}/trajektoria_m_{}".format(outputPlotsDirPath, plotsFileNameSufix))
-drowFunctionOfVariables(outputDataOdtFilePath, "Signal", "total resistance" , "{}/opor_napiecie_{}.png".format(outputPlotsDirPath, plotsFileNameSufix))
-
+	
 configFile = symulationName + ".json"
 configFileStr = open(configFile).read()
 configFileJson = json.loads(configFileStr)
 
 plotConfig = configFileJson["plot"]
 z=int(plotConfig["zSlice"])
+framesPerSecond=int(plotConfig["framesPerSecond"])
 
-try:
-	os.makedirs(outputPlotsDirPath+"/magnetization")
-except:
-	pass
-	
-try:
-	os.makedirs(outputPlotsDirPath+"/spin_torque")
-except:
-	pass
-	
-drowAllMatched2DvectorFields(outputDataDirPath+"/*.omf", z, outputPlotsDirPath+"/magnetization")
+drowFunctionOfVariables(outputDataOdtFilePath, "Simulation time", "Signal" , "{}/napiecie_{}.png".format(outputPlotsDirPath, plotsFileNameSufix))
+drowFunctionOfVariables(outputDataOdtFilePath, "Simulation time", "total resistance" , "{}/opor_{}.png".format(outputPlotsDirPath, plotsFileNameSufix))
+drowFunctionOfVariables(outputDataOdtFilePath, "Simulation time", "mx" , "{}/magnetyzacja_mx_{}.png".format(outputPlotsDirPath, plotsFileNameSufix))
+drowTrajectory(outputDataOdtFilePath, "{}/trajektoria_m_{}".format(outputPlotsDirPath, plotsFileNameSufix), framesPerSecond)
+drowFunctionOfVariables(outputDataOdtFilePath, "Signal", "total resistance" , "{}/opor_napiecie_{}.png".format(outputPlotsDirPath, plotsFileNameSufix))
+
+if plotConfig["drawSingleFrames"]:
+	try:
+		os.makedirs(outputPlotsDirPath+"/magnetization")
+	except:
+		pass
+	drowAllMatched2DvectorFields(outputDataDirPath+"/*.ovf", z, outputPlotsDirPath+"/spin_torque")
+	try:
+		os.makedirs(outputPlotsDirPath+"/spin_torque")
+	except:
+		pass
+	drowAllMatched2DvectorFields(outputDataDirPath+"/*.omf", z, outputPlotsDirPath+"/magnetization")
 
 try:
 	makeAnimation(outputDataDirPath+"/*.omf", z, outputPlotsDirPath+"/magnetization.mp4")
 except IndexError:
 	pass
-
-drowAllMatched2DvectorFields(outputDataDirPath+"/*.ovf", z, outputPlotsDirPath+"/spin_torque")
-	
 try:
 	makeAnimation(outputDataDirPath+"/*.ovf", z, outputPlotsDirPath+"/spin_torque.mp4")
 except IndexError:
