@@ -99,7 +99,7 @@ for parameters in symulParamGrid:
 										formatedParamValue = format(parameters[i], '.{paramPrecision}f'.format(paramPrecision = verbousParams[i][2])))
 		mifParametersStr += "{paramName} {paramValue} ".format(paramName = verbousParams[i][0], paramValue = parameters[i])
 	currentWorkDir = "{}/{}".format(symulationDirectory, parametersPathElement)
-	outputOdtFilePath = "{}/{}.odt".format(currentWorkDir, symulationName)
+	outputOdtFilePath = "{}/{}".format(currentWorkDir, symulationName)
 	mifParametersStr += "{} {} ".format("output_file", outputOdtFilePath)
 	
 	for i in range(len(silentParams)):

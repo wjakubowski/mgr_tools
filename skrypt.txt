@@ -9,16 +9,17 @@
 #SBATCH --error={currentWorkDir}/skrypt_error.txt
 
 if {doSymulation}; then
-	rm -f ${outputOdtFilePath}
+	outputOdtFilePath={outputOdtFilePath}
+	rm -f $outputOdtFilePath.odt
 	module load plgrid/tools/tcltk/8.5.19-threads
 	module load plgrid/tools/intel/16.0.3
 	module load plgrid/libs/mkl/11.3.1
-	touch ${outputOdtFilePath}
-	chgrp -R plggspinsym ${outputOdtFilePath}
+	touch $outputOdtFilePath.odt
+	chgrp -R plggspinsym $outputOdtFilePath.odt
 
 	export MKL_HOME=
 	/usr/bin/tclsh {oommfPath} boxsi \
-		${mifFilePath} -threads 4 -parameters "${mifParametersStr}"
+		{mifFilePath} -threads 4 -parameters "{mifParametersStr}"
 fi
 	
 if {doPloting}; then
