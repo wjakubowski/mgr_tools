@@ -172,9 +172,6 @@ Specify MF_CurrentFlowEvolver [subst {
   alpha 0.022
   min_timestep $timeStep
   max_timestep $timeStep
-  
-  ABCD 1234
-  numer_of_barier 2
 
   current_mode 0.0
 
