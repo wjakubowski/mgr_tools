@@ -12,7 +12,7 @@ if {doSymulation}; then
 	outputOdtFilePath={outputOdtFilePath}
 	rm -f $outputOdtFilePath.odt
 	module load plgrid/tools/tcltk/8.5.19-threads
-	module load plgrid/tools/intel/16.0.3
+	module load plgrid/tools/intel/17.0.5
 	module load plgrid/libs/mkl/11.3.1
 	touch $outputOdtFilePath.odt
 	chgrp -R plggspinsym $outputOdtFilePath.odt
