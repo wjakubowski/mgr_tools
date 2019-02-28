@@ -3,7 +3,7 @@
 Parameter Voltage 
 Parameter freeAniz 20000
 Parameter output_file 
-Parameter mtop
+Parameter mtop 1
 Parameter mxfree
 Parameter myfree 0
 Parameter stoppingTime 5e-9
@@ -33,7 +33,7 @@ SetOptions [subst {
 Specify Oxs_ScriptAtlas:top {
 xrange {0e-9 70e-9}
 yrange {0e-9 70e-9}
-zrange {2.5e-9 3.0e-9}
+zrange {3.0e-9 5.0e-9}
 regions {top emptytop}
 script_args { relpt }
 script EllipseZ
@@ -42,7 +42,7 @@ script EllipseZ
 Specify Oxs_ScriptAtlas:spacer_top {
 xrange {0e-9 70e-9}
 yrange {0e-9 70e-9}
-zrange {2.0e-9 2.5e-9}
+zrange {2.0e-9 3.0e-9}
 regions {spacer_top emptyspacer_top}
 script_args { relpt }
 script EllipseZ
@@ -51,7 +51,7 @@ script EllipseZ
 Specify Oxs_ScriptAtlas:free {
 xrange {0e-9 70e-9}
 yrange {0e-9 70e-9}
-zrange {1.0e-9 2.0e-9}
+zrange {0.0e-9 2.0e-9}
 regions {free emptyfree}
 script_args { relpt }
 script EllipseZ
@@ -104,7 +104,7 @@ Specify Oxs_Demag {}
 
 
 Specify Oxs_RectangularMesh:mesh {
- cellsize { 2e-09 2e-09 5e-10 }
+ cellsize { 2e-09 2e-09 1e-09 }
  atlas multiatlas1
 }
 
@@ -183,7 +183,7 @@ Specify MF_CurrentFlowEvolver [subst {
   atlas :multiatlas1
   region top
   scalarfield :zheight
-  scalarvalue 2.5e-9
+  scalarvalue 3.0e-9
   scalarside +
  }
  Inter_free_up {
