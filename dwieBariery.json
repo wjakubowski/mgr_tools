@@ -1,19 +1,17 @@
 {
 	"symulation":{
 		"doSymulation":true,
-		"oommfPath":"/net/scratch/people/plgwojciechjak/OOMMF-SWAG/oommf.tcl",
+		"oommfPath":"/net/archive/groups/plggspinsym/WJ/OOMMF-SWAG/oommf.tcl",
 		"grant":"grant009",
 		"partition":"plgrid",
-		"maxSimulationTime":"2:00:00",
+		"maxSimulationTime":"4:00:00",
 		"mifParameters":{
-			"mtop":							{"value":-1, "precision": 0, "type": "value", "verbous": true},
 			"mxfree":						{"value":"[math.sqrt(3)/2]", "precision": 4, "type": "script", "verbous": true},
 			"myfree":						{"value":0.5, "precision": 4, "type": "value", "verbous": true},
-			"mbottom":						{"value":1, "precision": 0, "type": "value", "verbous": true},
-			"VProfileType":					{"value":6, "precision": 0, "type": "value", "verbous": true},
-			"Voltage":						{"value":"[-0.15, 0.15]", "precision": 4, "type": "script", "verbous": true},
+			"VProfileType":					{"value":0, "precision": 0, "type": "value", "verbous": true},
+			"Voltage":						{"value":"[0.0]", "precision": 4, "type": "script", "verbous": true},
 						
-			"stoppingTime":					{"value":2e-8, "type": "value", "verbous": false},
+			"stoppingTime":					{"value":1e-8, "type": "value", "verbous": false},
 			"timeStep":						{"value":1e-13, "type": "value", "verbous": false},
 			"scheduleStep":					{"value":10, "type": "value", "verbous": false},
 			"vecFieldScheduleStep":			{"value":1000, "type": "value", "verbous": false}
@@ -21,8 +19,8 @@
 	},
 	"plot":{
 		"doPloting":true,
-		"zSlice":2,
-		"framesPerSecond":10,
+		"zSlice":3,
+		"framesPerSecond":5,
 		"drawSingleFrames":false
 	}
 }
