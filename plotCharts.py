@@ -78,6 +78,7 @@ class Plotter():
 		plt.ylabel("{} [{}]".format(yLabel,yUnit))
 							
 	def drowFunctionOfVariables(self, variableNameX, variableNameY, outputFile):
+		plt.figure().clf()
 		if plottingConfig["multiPlotMode"]:
 			for legendLabel, odtPath in plottingConfig["odtSources"].items():
 				self.drowSinglePlot(odtPath, variableNameX, variableNameY, legendLabel)
@@ -96,37 +97,44 @@ class Plotter():
 		plt.ylabel("{} [1]".format("my"))
 		ax.set_zlabel("{} [1]".format("mz"))"""
 
-			
-	def drowTrajectory(self, variableNameX, variableNameY, variableNameZ, outputFile):
-		xDict = self.odtFiles[self.odtFileName][variableNameX]
-		yDict = self.odtFiles[self.odtFileName][variableNameY]
-		zDict = self.odtFiles[self.odtFileName][variableNameZ]
-		tDict = self.odtFiles[self.odtFileName]["{Oxs_TimeDriver::Simulation time}"]
+	def drowSingleTrajcetory(self, ax, odtFileName, variableNameX, variableNameY, variableNameZ, legendLabel = ""):
+		xDict = self.odtFiles[odtFileName][variableNameX]
+		yDict = self.odtFiles[odtFileName][variableNameY]
+		zDict = self.odtFiles[odtFileName][variableNameZ]
+		tDict = self.odtFiles[odtFileName]["{Oxs_TimeDriver::Simulation time}"]
 		
 		x = xDict["data"]
-		xLabel = variableNameX
+		xLabel = self.replaceHeader(variableNameX)
 		xUnit = xDict["unit"]
 
 		y = yDict["data"]
-		yLabel = variableNameY
+		yLabel = self.replaceHeader(variableNameY)
 		yUnit = yDict["unit"]
 		
 		z = zDict["data"]
-		zLabel = variableNameZ
+		zLabel = self.replaceHeader(variableNameZ)
 		zUnit = zDict["unit"]
 
 		t = tDict["data"]
 		tLabel = "{Oxs_TimeDriver::Simulation time}"
 		tUnit = tDict["unit"]
-		
-		fig = plt.figure()
-		ax = fig.gca(projection='3d')
-		ax.clear()
-		ax.plot(x, y, z)
-		ax.legend()
+
+		ax.plot(x, y, z, label=legendLabel)
 		plt.xlabel("{} [{}]".format(xLabel,xUnit))
 		plt.ylabel("{} [{}]".format(yLabel,yUnit))
 		ax.set_zlabel("{} [{}]".format(zLabel,zUnit))
+			
+	def drowTrajectory(self, variableNameX, variableNameY, variableNameZ, outputFile):
+		fig = plt.figure()
+		fig.clf()
+		ax = fig.gca(projection='3d')
+		ax.clear()
+		if plottingConfig["multiPlotMode"]:
+			for legendLabel, odtPath in plottingConfig["odtSources"].items():
+				self.drowSingleTrajcetory(ax, odtPath, variableNameX, variableNameY, variableNameZ, legendLabel)
+			plt.legend()
+		else:
+			self.drowSingleTrajcetory(ax, self.odtFileName, variableNameX, variableNameY, variableNameZ)
 		plt.savefig(outputFile)
 		plt.close()
 		
