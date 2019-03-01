@@ -12,94 +12,100 @@ import matplotlib.animation as animation
 from plot2DvectorField import makeAnimation as makeAnimation
 from plot2DvectorField import drowAllMatched2DvectorFields as drowAllMatched2DvectorFields
 
-def getColumnWithHeader(odtFileName, header):
-	with open(odtFileName) as odtFile:
-		headersLine = None
-		unitsLine = None
-		for line in odtFile:
-			splitedLine = line.split()
-			if splitedLine[0] == '#' and splitedLine[1] == 'Columns:':
-				headersLine = re.sub("# Columns: ", "", line)
-				break
-				
-		for line in odtFile:
-			splitedLine = line.split()
-			if splitedLine[0] == '#' and splitedLine[1] == 'Units:':
-				unitsLine = re.sub("# Units: ", "", line)
-				break
-				
-		allHeaders = re.findall("(\{[a-zA-Z0-9\ :-_\/]+\}|[a-zA-Z0-9:-_\/]+)", headersLine)
-		allUnits = re.findall("(\{[a-zA-Z0-9\/\ ]*\}|[a-zA-Z0-9\/]+)", unitsLine)
-		for i in range(len(allHeaders)):
-			allHeaders[i] = re.sub("\{|\}" ,"", allHeaders[i])
-			if len(re.findall(header, allHeaders[i])):
-				return i, allHeaders[i], allUnits[i]
-						
-def drowFunctionOfVariables(odtFileName, variableNameX, variableNameY, outputFile):
-	with open(odtFileName) as odtFile:
-		x = []
-		y = []
-		xIndex, xLabel, xUnit = getColumnWithHeader(odtFileName, variableNameX)
-		yIndex, yLabel, yUnit = getColumnWithHeader(odtFileName, variableNameY)
-		for line in odtFile:
-			if not line[0] == '#':
-				splitedLine = line.split()
-				x.append(float(splitedLine[xIndex]))
-				y.append(float(splitedLine[yIndex]))
-		
-		plt.plot(x, y)
-		plt.xlabel("{} [{}]".format(variableNameX,xUnit))
-		plt.ylabel("{} [{}]".format(variableNameY,yUnit))
-		plt.savefig(outputFile)
-		plt.close()
+class Plotter():
 
-def animate(i, x, y, z, ax, fig):
-	ax.clear()
-	ax.plot(x[:i], y[:i], z[:i])
-	ax.legend()
-	plt.xlabel("{} [1]".format("mx"))
-	plt.ylabel("{} [1]".format("my"))
-	ax.set_zlabel("{} [1]".format("mz"))
+	def __init__(self, odtFileName):
+		self.odtFileName = odtFileName
 
-		
-def drowTrajectory(odtFileName, outputFile, framesPerSecond):
-	with open(odtFileName) as odtFile:
-		x = []
-		y = []
-		z = []
-		xIndex, xLabel, xUnit = getColumnWithHeader(odtFileName, "mx")
-		yIndex, yLabel, yUnit = getColumnWithHeader(odtFileName, "my")
-		zIndex, zLabel, zUnit = getColumnWithHeader(odtFileName, "mz")
-		for line in odtFile:
-			if not line[0] == '#':
+	def getColumnWithHeader(self, header):
+		with open(self.odtFileName) as odtFile:
+			headersLine = None
+			unitsLine = None
+			for line in odtFile:
 				splitedLine = line.split()
-				x.append(float(splitedLine[xIndex]))
-				y.append(float(splitedLine[yIndex]))
-				z.append(float(splitedLine[zIndex]))
-		numberOfFrames = len(x)
-		fig = plt.figure()
-		ax = fig.gca(projection='3d')
+				if splitedLine[0] == '#' and splitedLine[1] == 'Columns:':
+					headersLine = re.sub("# Columns: ", "", line)
+					break
+					
+			for line in odtFile:
+				splitedLine = line.split()
+				if splitedLine[0] == '#' and splitedLine[1] == 'Units:':
+					unitsLine = re.sub("# Units: ", "", line)
+					break
+					
+			allHeaders = re.findall("(\{[a-zA-Z0-9\ :-_\/]+\}|[a-zA-Z0-9:-_\/]+)", headersLine)
+			allUnits = re.findall("(\{[a-zA-Z0-9\/\ ]*\}|[a-zA-Z0-9\/]+)", unitsLine)
+			for i in range(len(allHeaders)):
+				allHeaders[i] = re.sub("\{|\}" ,"", allHeaders[i])
+				if len(re.findall(header, allHeaders[i])):
+					return i, allHeaders[i], allUnits[i]
+							
+	def drowFunctionOfVariables(self, variableNameX, variableNameY, outputFile):
+		with open(self.odtFileName) as odtFile:
+			x = []
+			y = []
+			xIndex, xLabel, xUnit = self.getColumnWithHeader(variableNameX)
+			yIndex, yLabel, yUnit = self.getColumnWithHeader(variableNameY)
+			for line in odtFile:
+				if not line[0] == '#':
+					splitedLine = line.split()
+					x.append(float(splitedLine[xIndex]))
+					y.append(float(splitedLine[yIndex]))
+			
+			plt.plot(x, y)
+			plt.xlabel("{} [{}]".format(variableNameX,xUnit))
+			plt.ylabel("{} [{}]".format(variableNameY,yUnit))
+			plt.savefig(outputFile)
+			plt.close()
+
+	def animate(self, i, x, y, z, ax, fig):
 		ax.clear()
-		ax.plot(x, y, z)
+		ax.plot(x[:i], y[:i], z[:i])
 		ax.legend()
-		plt.xlabel("{} [{}]".format(xLabel,xUnit))
-		plt.ylabel("{} [{}]".format(yLabel,yUnit))
-		ax.set_zlabel("{} [{}]".format(zLabel,zUnit))
-		plt.savefig(outputFile+".png")
-		plt.close()
-	
-		fig = plt.figure()
-		ax = fig.gca(projection='3d')
-		ani = animation.FuncAnimation(fig, animate , frames = len(x), fargs = (x, y, z, ax, fig))
-		ani.save(outputFile+".mp4", fps=framesPerSecond)
-		plt.close()
+		plt.xlabel("{} [1]".format("mx"))
+		plt.ylabel("{} [1]".format("my"))
+		ax.set_zlabel("{} [1]".format("mz"))
+
+			
+	def drowTrajectory(self, variableNameX, variableNameY, variableNameZ, outputFile, framesPerSecond):
+		with open(self.odtFileName) as odtFile:
+			x = []
+			y = []
+			z = []
+			t = []
+			xIndex, xLabel, xUnit = self.getColumnWithHeader(variableNameX)
+			yIndex, yLabel, yUnit = self.getColumnWithHeader(variableNameY)
+			zIndex, zLabel, zUnit = self.getColumnWithHeader(variableNameZ)
+			tIndex, tLabel, tUnit = self.getColumnWithHeader("Simulation time")
+			for line in odtFile:
+				if not line[0] == '#':
+					splitedLine = line.split()
+					x.append(float(splitedLine[xIndex]))
+					y.append(float(splitedLine[yIndex]))
+					z.append(float(splitedLine[zIndex]))
+					t.append(float(splitedLine[tIndex]))
+			fig = plt.figure()
+			ax = fig.gca(projection='3d')
+			ax.clear()
+			ax.plot(x, y, z)
+			ax.legend()
+			plt.xlabel("{} [{}]".format(xLabel,xUnit))
+			plt.ylabel("{} [{}]".format(yLabel,yUnit))
+			ax.set_zlabel("{} [{}]".format(zLabel,zUnit))
+			plt.savefig(outputFile+".png")
+			plt.close()
+		
+			"""fig = plt.figure()
+			ax = fig.gca(projection='3d')
+			ani = animation.FuncAnimation(fig, animate , frames = len(x), fargs = (x, y, z, ax, fig))
+			ani.save(outputFile+".mp4", fps=framesPerSecond)
+			plt.close()"""
 
 thisScritDirPath = os.getcwd()
 parametersPathElement = sys.argv[1]
 symulationName = sys.argv[2]
-plotsFileNameSufix = symulationName
 outputDataDirPath = thisScritDirPath+"/"+symulationName+"/"+parametersPathElement
-outputPlotsDirPath = thisScritDirPath+"/plots/"+symulationName+"/"+parametersPathElement
+outputPlotsDirPath = thisScritDirPath+"/plots_tmp/"+symulationName+"/"+parametersPathElement
 outputDataOdtFilePath = outputDataDirPath+"/"+symulationName+".odt"
 
 try:
@@ -111,17 +117,20 @@ configFile = symulationName + ".json"
 configFileStr = open(configFile).read()
 configFileJson = json.loads(configFileStr)
 
-plotConfig = configFileJson["plot"]
-z=int(plotConfig["zSlice"])
-framesPerSecond=int(plotConfig["framesPerSecond"])
+plottingConfig = configFileJson["plot"]
+z=int(plottingConfig["zSlice"])
+framesPerSecond=int(plottingConfig["framesPerSecond"])
+odtPlots=plottingConfig["odtPlots"]
 
-drowFunctionOfVariables(outputDataOdtFilePath, "Simulation time", "Signal" , "{}/napiecie_{}.png".format(outputPlotsDirPath, plotsFileNameSufix))
-drowFunctionOfVariables(outputDataOdtFilePath, "Simulation time", "total resistance" , "{}/opor_{}.png".format(outputPlotsDirPath, plotsFileNameSufix))
-drowFunctionOfVariables(outputDataOdtFilePath, "Simulation time", "mx" , "{}/magnetyzacja_mx_{}.png".format(outputPlotsDirPath, plotsFileNameSufix))
-drowTrajectory(outputDataOdtFilePath, "{}/trajektoria_m_{}".format(outputPlotsDirPath, plotsFileNameSufix), framesPerSecond)
-drowFunctionOfVariables(outputDataOdtFilePath, "Signal", "total resistance" , "{}/opor_napiecie_{}.png".format(outputPlotsDirPath, plotsFileNameSufix))
+plotter = Plotter(outputDataOdtFilePath)
 
-if plotConfig["drawSingleFrames"]:
+#for plotName, plotConfig in odtPlots.items():
+#	plotter.drowFunctionOfVariables(plotConfig["variableNameX"], plotConfig["variableNameY"] , plotConfig["outputFile"].format(outputPlotsDirPath))
+
+plotter.drowTrajectory("mx", "my", "mz", "{}/trajektoria_m".format(outputPlotsDirPath), framesPerSecond)
+
+
+if plottingConfig["drawSingleFrames"]:
 	try:
 		os.makedirs(outputPlotsDirPath+"/magnetization")
 	except:
@@ -133,12 +142,12 @@ if plotConfig["drawSingleFrames"]:
 		pass
 	drowAllMatched2DvectorFields(outputDataDirPath+"/*.omf", z, outputPlotsDirPath+"/magnetization")
 
-try:
+"""try:
 	makeAnimation(outputDataDirPath+"/*.omf", z, outputPlotsDirPath+"/magnetization.mp4")
 except IndexError:
 	pass
 try:
 	makeAnimation(outputDataDirPath+"/*.ovf", z, outputPlotsDirPath+"/spin_torque.mp4")
 except IndexError:
-	pass
+	pass"""
 	

@@ -21,6 +21,12 @@
 		"doPloting":true,
 		"zSlice":3,
 		"framesPerSecond":5,
-		"drawSingleFrames":false
+		"drawSingleFrames":false,
+				"odtPlots":{
+				"1":{"variableNameX":"Simulation time", "variableNameY":"Signal", "outputFile":"{}/napiecie.svg"},
+				"2":{"variableNameX":"Simulation time", "variableNameY":"total resistance", "outputFile":"{}/opor.svg"},
+				"3":{"variableNameX":"Simulation time", "variableNameY":"mx", "outputFile":"{}/magnetyzacja_mx.svg"},
+				"4":{"variableNameX":"Signal", "variableNameY":"total resistance", "outputFile":"{}/opor_napiecie.svg"}
+			}
 	}
 }
