@@ -16,9 +16,14 @@ class Plotter():
 
 	def __init__(self, odtFileName):
 		self.odtFileName = odtFileName
-
-	def getColumnWithHeader(self, header):
-		with open(self.odtFileName) as odtFile:
+		self.odtFileNames = [self.odtFileName]
+		self.odtFiles = {}
+		for odtFileName in self.odtFileNames:
+			self.odtFiles[odtFileName] = self.readOdtFile(odtFileName)
+		
+	def readOdtFile(self, odtFileName):
+		odtColumnsDict = {}
+		with open(odtFileName) as odtFile:
 			headersLine = None
 			unitsLine = None
 			for line in odtFile:
@@ -35,22 +40,31 @@ class Plotter():
 					
 			allHeaders = re.findall("(\{[a-zA-Z0-9\ :-_\/]+\}|[a-zA-Z0-9:-_\/]+)", headersLine)
 			allUnits = re.findall("(\{[a-zA-Z0-9\/\ ]*\}|[a-zA-Z0-9\/]+)", unitsLine)
+			
 			for i in range(len(allHeaders)):
-				allHeaders[i] = re.sub("\{|\}" ,"", allHeaders[i])
-				if len(re.findall(header, allHeaders[i])):
-					return i, allHeaders[i], allUnits[i]
-							
-	def drowFunctionOfVariables(self, variableNameX, variableNameY, outputFile):
-		with open(self.odtFileName) as odtFile:
-			x = []
-			y = []
-			xIndex, xLabel, xUnit = self.getColumnWithHeader(variableNameX)
-			yIndex, yLabel, yUnit = self.getColumnWithHeader(variableNameY)
+				odtColumnsDict[allHeaders[i]] = {"unit":allUnits[i], "data":[]}
+
 			for line in odtFile:
 				if not line[0] == '#':
 					splitedLine = line.split()
-					x.append(float(splitedLine[xIndex]))
-					y.append(float(splitedLine[yIndex]))
+					for headerInd in range(len(allHeaders)):
+						odtColumnsDict[allHeaders[headerInd]]["data"].append(float(splitedLine[headerInd]))
+						
+		return odtColumnsDict
+							
+	def drowFunctionOfVariables(self, variableNameX, variableNameY, outputFile):
+		with open(self.odtFileName) as odtFile:
+		
+			xDict = self.odtFiles[self.odtFileName][variableNameX]
+			yDict = self.odtFiles[self.odtFileName][variableNameY]
+		
+			x = xDict["data"]
+			xLabel = variableNameX
+			xUnit = xDict["unit"]
+
+			y = yDict["data"]
+			yLabel = variableNameY
+			yUnit = yDict["unit"]
 			
 			plt.plot(x, y)
 			plt.xlabel("{} [{}]".format(variableNameX,xUnit))
@@ -69,21 +83,27 @@ class Plotter():
 			
 	def drowTrajectory(self, variableNameX, variableNameY, variableNameZ, outputFile, framesPerSecond):
 		with open(self.odtFileName) as odtFile:
-			x = []
-			y = []
-			z = []
-			t = []
-			xIndex, xLabel, xUnit = self.getColumnWithHeader(variableNameX)
-			yIndex, yLabel, yUnit = self.getColumnWithHeader(variableNameY)
-			zIndex, zLabel, zUnit = self.getColumnWithHeader(variableNameZ)
-			tIndex, tLabel, tUnit = self.getColumnWithHeader("Simulation time")
-			for line in odtFile:
-				if not line[0] == '#':
-					splitedLine = line.split()
-					x.append(float(splitedLine[xIndex]))
-					y.append(float(splitedLine[yIndex]))
-					z.append(float(splitedLine[zIndex]))
-					t.append(float(splitedLine[tIndex]))
+			xDict = self.odtFiles[self.odtFileName][variableNameX]
+			yDict = self.odtFiles[self.odtFileName][variableNameY]
+			zDict = self.odtFiles[self.odtFileName][variableNameZ]
+			tDict = self.odtFiles[self.odtFileName]["{Oxs_TimeDriver::Simulation time}"]
+		
+			x = xDict["data"]
+			xLabel = variableNameX
+			xUnit = xDict["unit"]
+
+			y = yDict["data"]
+			yLabel = variableNameY
+			yUnit = yDict["unit"]
+			
+			z = zDict["data"]
+			zLabel = variableNameZ
+			zUnit = zDict["unit"]
+
+			t = tDict["data"]
+			tLabel = "{Oxs_TimeDriver::Simulation time}"
+			tUnit = tDict["unit"]
+			
 			fig = plt.figure()
 			ax = fig.gca(projection='3d')
 			ax.clear()
@@ -92,7 +112,7 @@ class Plotter():
 			plt.xlabel("{} [{}]".format(xLabel,xUnit))
 			plt.ylabel("{} [{}]".format(yLabel,yUnit))
 			ax.set_zlabel("{} [{}]".format(zLabel,zUnit))
-			plt.savefig(outputFile+".png")
+			plt.savefig(outputFile)
 			plt.close()
 		
 			"""fig = plt.figure()
@@ -124,10 +144,11 @@ odtPlots=plottingConfig["odtPlots"]
 
 plotter = Plotter(outputDataOdtFilePath)
 
-#for plotName, plotConfig in odtPlots.items():
-#	plotter.drowFunctionOfVariables(plotConfig["variableNameX"], plotConfig["variableNameY"] , plotConfig["outputFile"].format(outputPlotsDirPath))
-
-plotter.drowTrajectory("mx", "my", "mz", "{}/trajektoria_m".format(outputPlotsDirPath), framesPerSecond)
+for plotName, plotConfig in odtPlots.items():
+	if plotConfig["dim"] == "2D":
+		plotter.drowFunctionOfVariables(plotConfig["variableNameX"], plotConfig["variableNameY"] , plotConfig["outputFile"].format(outputPlotsDirPath))
+	elif plotConfig["dim"] == "3D":
+		plotter.drowTrajectory(plotConfig["variableNameX"], plotConfig["variableNameY"], plotConfig["variableNameZ"] , plotConfig["outputFile"].format(outputPlotsDirPath), framesPerSecond)
 
 
 if plottingConfig["drawSingleFrames"]:

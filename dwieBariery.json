@@ -22,11 +22,12 @@
 		"zSlice":3,
 		"framesPerSecond":5,
 		"drawSingleFrames":false,
-				"odtPlots":{
-				"1":{"variableNameX":"Simulation time", "variableNameY":"Signal", "outputFile":"{}/napiecie.svg"},
-				"2":{"variableNameX":"Simulation time", "variableNameY":"total resistance", "outputFile":"{}/opor.svg"},
-				"3":{"variableNameX":"Simulation time", "variableNameY":"mx", "outputFile":"{}/magnetyzacja_mx.svg"},
-				"4":{"variableNameX":"Signal", "variableNameY":"total resistance", "outputFile":"{}/opor_napiecie.svg"}
-			}
+		"odtPlots":{
+			"1":{"dim":"2D","variableNameX":"{Oxs_TimeDriver::Simulation time}", "variableNameY":"MF_CurrentFlowEvolver::Signal", "outputFile":"{}/napiecie.svg"},
+			"2":{"dim":"2D","variableNameX":"{Oxs_TimeDriver::Simulation time}", "variableNameY":"{MF_CurrentFlowEvolver::total resistance}", "outputFile":"{}/opor.svg"},
+			"3":{"dim":"2D","variableNameX":"{Oxs_TimeDriver::Simulation time}", "variableNameY":"Oxs_TimeDriver::mx", "outputFile":"{}/magnetyzacja_mx.svg"},
+			"4":{"dim":"2D","variableNameX":"MF_CurrentFlowEvolver::Signal", "variableNameY":"{MF_CurrentFlowEvolver::total resistance}", "outputFile":"{}/opor_napiecie.svg"},
+			"5":{"dim":"3D","variableNameX":"Oxs_TimeDriver::mx", "variableNameY":"Oxs_TimeDriver::my", "variableNameZ":"Oxs_TimeDriver::mz", "outputFile":"{}/trajektoria_m.svg"}
+		}
 	}
 }
