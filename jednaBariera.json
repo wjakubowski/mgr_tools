@@ -25,9 +25,9 @@
 		"odtPlots":{
 			"1":{"dim":"2D","variableNameX":"{Oxs_TimeDriver::Simulation time}", "variableNameY":"MF_CurrentFlowEvolver::Signal", "outputFile":"{}/napiecie.svg"},
 			"2":{"dim":"2D","variableNameX":"{Oxs_TimeDriver::Simulation time}", "variableNameY":"{MF_CurrentFlowEvolver::total resistance}", "outputFile":"{}/opor.svg"},
-			"3":{"dim":"2D","variableNameX":"{Oxs_TimeDriver::Simulation time}", "variableNameY":"Oxs_TimeDriver::mx", "outputFile":"{}/magnetyzacja_mx.svg"},
+			"3":{"dim":"2D","variableNameX":"{Oxs_TimeDriver::Simulation time}", "variableNameY":"Oxs_TimeDriver::mx", "outputFile":"{}/magnetyzacja_mx.svg", "scalingFunction":"lambda (x):(x*2.0-1.0)"},
 			"4":{"dim":"2D","variableNameX":"MF_CurrentFlowEvolver::Signal", "variableNameY":"{MF_CurrentFlowEvolver::total resistance}", "outputFile":"{}/opor_napiecie.svg"},
-			"5":{"dim":"3D","variableNameX":"Oxs_TimeDriver::mx", "variableNameY":"Oxs_TimeDriver::my", "variableNameZ":"Oxs_TimeDriver::mz", "outputFile":"{}/trajektoria_m.svg"}
+			"5":{"dim":"3D","variableNameX":"Oxs_TimeDriver::mx", "variableNameY":"Oxs_TimeDriver::my", "variableNameZ":"Oxs_TimeDriver::mz", "outputFile":"{}/trajektoria_m.svg", "scalingFunction":"lambda (x):(x*2.0-1.0)"}
 		},
 		"headersMap":{
 			"{Oxs_TimeDriver::Simulation time}":"t",
@@ -43,6 +43,7 @@
 		},
 		"multiPlotMode":true,
 		"odtSources":{
+			"0.08V":"/net/archive/groups/plggspinsym/WJ/jednaBariera/myfree_0.5000_mxfree_-0.8660_VProfileType_0_Voltage_0.0800_/jednaBariera.odt",
 			"0.12V":"/net/archive/groups/plggspinsym/WJ/jednaBariera/myfree_0.5000_mxfree_-0.8660_VProfileType_0_Voltage_0.1200_/jednaBariera.odt",
 			"0.16V":"/net/archive/groups/plggspinsym/WJ/jednaBariera/myfree_0.5000_mxfree_-0.8660_VProfileType_0_Voltage_0.1600_/jednaBariera.odt"
 		}

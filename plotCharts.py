@@ -61,7 +61,10 @@ class Plotter():
 		else: 
 			return headerName
 							
-	def drowSinglePlot(self, odtFileName, variableNameX, variableNameY, legendLabel = ""):
+	def drowSinglePlot(self, plotConfig, odtFileName, legendLabel = ""):
+		variableNameX = plotConfig["variableNameX"]
+		variableNameY = plotConfig["variableNameY"]
+		
 		xDict = self.odtFiles[odtFileName][variableNameX]
 		yDict = self.odtFiles[odtFileName][variableNameY]
 		
@@ -73,18 +76,22 @@ class Plotter():
 		yLabel = self.replaceHeader(variableNameY)
 		yUnit = self.replaceHeader(yDict["unit"])
 		
+		if "scalingFunction" in plotConfig:
+			scalingFunction = eval(plotConfig["scalingFunction"])
+			y = [scalingFunction(f) for f in y]
+		
 		plt.plot(x, y, label = legendLabel)
 		plt.xlabel("{} [{}]".format(xLabel,xUnit))
 		plt.ylabel("{} [{}]".format(yLabel,yUnit))
 							
-	def drowFunctionOfVariables(self, variableNameX, variableNameY, outputFile):
+	def drowFunctionOfVariables(self, plotConfig, outputFile):
 		plt.figure().clf()
 		if plottingConfig["multiPlotMode"]:
 			for legendLabel, odtPath in plottingConfig["odtSources"].items():
-				self.drowSinglePlot(odtPath, variableNameX, variableNameY, legendLabel)
+				self.drowSinglePlot(plotConfig, odtPath, legendLabel)
 			plt.legend()
 		else:
-			self.drowSinglePlot(self.odtFileName, variableNameX, variableNameY)
+			self.drowSinglePlot(plotConfig, self.odtFileName)
 	
 		plt.savefig(outputFile)
 		plt.close()
@@ -97,7 +104,11 @@ class Plotter():
 		plt.ylabel("{} [1]".format("my"))
 		ax.set_zlabel("{} [1]".format("mz"))"""
 
-	def drowSingleTrajcetory(self, ax, odtFileName, variableNameX, variableNameY, variableNameZ, legendLabel = ""):
+	def drowSingleTrajcetory(self, ax, plotConfig, odtFileName, legendLabel = ""):
+		variableNameX = plotConfig["variableNameX"]
+		variableNameY = plotConfig["variableNameY"]
+		variableNameZ = plotConfig["variableNameZ"]
+		
 		xDict = self.odtFiles[odtFileName][variableNameX]
 		yDict = self.odtFiles[odtFileName][variableNameY]
 		zDict = self.odtFiles[odtFileName][variableNameZ]
@@ -105,36 +116,42 @@ class Plotter():
 		
 		x = xDict["data"]
 		xLabel = self.replaceHeader(variableNameX)
-		xUnit = xDict["unit"]
+		xUnit = self.replaceHeader(xDict["unit"])
 
 		y = yDict["data"]
 		yLabel = self.replaceHeader(variableNameY)
-		yUnit = yDict["unit"]
+		yUnit = self.replaceHeader(yDict["unit"])
 		
 		z = zDict["data"]
 		zLabel = self.replaceHeader(variableNameZ)
-		zUnit = zDict["unit"]
+		zUnit = self.replaceHeader(zDict["unit"])
 
 		t = tDict["data"]
 		tLabel = "{Oxs_TimeDriver::Simulation time}"
-		tUnit = tDict["unit"]
+		tUnit = self.replaceHeader(tDict["unit"])
+		
+		if "scalingFunction" in plotConfig:
+			scalingFunction = eval(plotConfig["scalingFunction"])
+			x = [scalingFunction(f) for f in x]
+			y = [scalingFunction(f) for f in y]
+			z = [scalingFunction(f) for f in z]
 
 		ax.plot(x, y, z, label=legendLabel)
 		plt.xlabel("{} [{}]".format(xLabel,xUnit))
 		plt.ylabel("{} [{}]".format(yLabel,yUnit))
 		ax.set_zlabel("{} [{}]".format(zLabel,zUnit))
 			
-	def drowTrajectory(self, variableNameX, variableNameY, variableNameZ, outputFile):
+	def drowTrajectory(self, plotConfig, outputFile):
 		fig = plt.figure()
 		fig.clf()
 		ax = fig.gca(projection='3d')
 		ax.clear()
 		if plottingConfig["multiPlotMode"]:
-			for legendLabel, odtPath in plottingConfig["odtSources"].items():
-				self.drowSingleTrajcetory(ax, odtPath, variableNameX, variableNameY, variableNameZ, legendLabel)
+			for legendLabel, odtPath in sorted(plottingConfig["odtSources"].items()):
+				self.drowSingleTrajcetory(ax, plotConfig, odtPath, legendLabel)
 			plt.legend()
 		else:
-			self.drowSingleTrajcetory(ax, self.odtFileName, variableNameX, variableNameY, variableNameZ)
+			self.drowSingleTrajcetory(ax, plotConfig, self.odtFileName)
 		plt.savefig(outputFile)
 		plt.close()
 		
@@ -168,9 +185,9 @@ plotter = Plotter(outputDataOdtFilePath, plottingConfig)
 
 for plotName, plotConfig in odtPlots.items():
 	if plotConfig["dim"] == "2D":
-		plotter.drowFunctionOfVariables(plotConfig["variableNameX"], plotConfig["variableNameY"] , plotConfig["outputFile"].format(outputPlotsDirPath))
+		plotter.drowFunctionOfVariables(plotConfig , plotConfig["outputFile"].format(outputPlotsDirPath))
 	elif plotConfig["dim"] == "3D":
-		plotter.drowTrajectory(plotConfig["variableNameX"], plotConfig["variableNameY"], plotConfig["variableNameZ"] , plotConfig["outputFile"].format(outputPlotsDirPath))
+		plotter.drowTrajectory(plotConfig , plotConfig["outputFile"].format(outputPlotsDirPath))
 
 
 """if plottingConfig["drawSingleFrames"]:
