@@ -25,8 +25,7 @@ fi
 if {doPloting}; then
 	module load plgrid/libs/python-numpy
 	module load plgrid/tools/ffmpeg
-	# module load plgrid/tools/imagemagick
-	python {thisScritDirPath}/plotCharts.py {parametersPathElement} {symulationName}
+	python {thisScritDirPath}/plotCharts.py {symulationName} {parametersPathElement}
 fi
 
 echo "script finished:";

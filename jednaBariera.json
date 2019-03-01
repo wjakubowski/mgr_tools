@@ -40,6 +40,11 @@
 			"Ohm":"$\\Omega$",
 			"{SI units}":"V",
 			"{}":"1"
+		},
+		"multiPlotMode":true,
+		"odtSources":{
+			"0.12V":"/net/archive/groups/plggspinsym/WJ/jednaBariera/myfree_0.5000_mxfree_-0.8660_VProfileType_0_Voltage_0.1200_/jednaBariera.odt",
+			"0.16V":"/net/archive/groups/plggspinsym/WJ/jednaBariera/myfree_0.5000_mxfree_-0.8660_VProfileType_0_Voltage_0.1600_/jednaBariera.odt"
 		}
 	}
 }

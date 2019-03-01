@@ -40,6 +40,7 @@
 			"Ohm":"$\\Omega$",
 			"{SI units}":"V",
 			"{}":"1"
-		}
+		},
+		"multiPlotMode":false
 	}
 }
