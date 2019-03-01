@@ -28,6 +28,18 @@
 			"3":{"dim":"2D","variableNameX":"{Oxs_TimeDriver::Simulation time}", "variableNameY":"Oxs_TimeDriver::mx", "outputFile":"{}/magnetyzacja_mx.svg"},
 			"4":{"dim":"2D","variableNameX":"MF_CurrentFlowEvolver::Signal", "variableNameY":"{MF_CurrentFlowEvolver::total resistance}", "outputFile":"{}/opor_napiecie.svg"},
 			"5":{"dim":"3D","variableNameX":"Oxs_TimeDriver::mx", "variableNameY":"Oxs_TimeDriver::my", "variableNameZ":"Oxs_TimeDriver::mz", "outputFile":"{}/trajektoria_m.svg"}
+		},
+		"headersMap":{
+			"{Oxs_TimeDriver::Simulation time}":"t",
+			"MF_CurrentFlowEvolver::Signal":"V",
+			"{MF_CurrentFlowEvolver::total resistance}":"R",
+			"Oxs_TimeDriver::mx":"$M_x$",
+			"Oxs_TimeDriver::my":"$M_y$",
+			"Oxs_TimeDriver::mz":"$M_z$",
+			
+			"Ohm":"$\\Omega$",
+			"{SI units}":"V",
+			"{}":"1"
 		}
 	}
 }

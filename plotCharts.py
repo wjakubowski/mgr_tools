@@ -14,8 +14,10 @@ from plot2DvectorField import drowAllMatched2DvectorFields as drowAllMatched2Dve
 
 class Plotter():
 
-	def __init__(self, odtFileName):
+	def __init__(self, odtFileName, plottingConfig):
 		self.odtFileName = odtFileName
+		self.plottingConfig = plottingConfig
+		self.headersMap = self.plottingConfig["headersMap"]
 		self.odtFileNames = [self.odtFileName]
 		self.odtFiles = {}
 		for odtFileName in self.odtFileNames:
@@ -51,6 +53,12 @@ class Plotter():
 						odtColumnsDict[allHeaders[headerInd]]["data"].append(float(splitedLine[headerInd]))
 						
 		return odtColumnsDict
+		
+	def replaceHeader(self, headerName):
+		if headerName in self.headersMap:
+			return self.headersMap[headerName]
+		else: 
+			return headerName
 							
 	def drowFunctionOfVariables(self, variableNameX, variableNameY, outputFile):
 		with open(self.odtFileName) as odtFile:
@@ -59,16 +67,16 @@ class Plotter():
 			yDict = self.odtFiles[self.odtFileName][variableNameY]
 		
 			x = xDict["data"]
-			xLabel = variableNameX
-			xUnit = xDict["unit"]
+			xLabel = self.replaceHeader(variableNameX)
+			xUnit = self.replaceHeader(xDict["unit"])
 
 			y = yDict["data"]
-			yLabel = variableNameY
-			yUnit = yDict["unit"]
+			yLabel = self.replaceHeader(variableNameY)
+			yUnit = self.replaceHeader(yDict["unit"])
 			
 			plt.plot(x, y)
-			plt.xlabel("{} [{}]".format(variableNameX,xUnit))
-			plt.ylabel("{} [{}]".format(variableNameY,yUnit))
+			plt.xlabel("{} [{}]".format(xLabel,xUnit))
+			plt.ylabel("{} [{}]".format(yLabel,yUnit))
 			plt.savefig(outputFile)
 			plt.close()
 
@@ -142,7 +150,7 @@ z=int(plottingConfig["zSlice"])
 framesPerSecond=int(plottingConfig["framesPerSecond"])
 odtPlots=plottingConfig["odtPlots"]
 
-plotter = Plotter(outputDataOdtFilePath)
+plotter = Plotter(outputDataOdtFilePath, plottingConfig)
 
 for plotName, plotConfig in odtPlots.items():
 	if plotConfig["dim"] == "2D":
