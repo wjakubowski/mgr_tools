@@ -108,11 +108,12 @@ class Plotter():
 		variableNameX = plotConfig["variableNameX"]
 		variableNameY = plotConfig["variableNameY"]
 		variableNameZ = plotConfig["variableNameZ"]
+		parameterName = "{Oxs_TimeDriver::Simulation time}"
 		
 		xDict = self.odtFiles[odtFileName][variableNameX]
 		yDict = self.odtFiles[odtFileName][variableNameY]
 		zDict = self.odtFiles[odtFileName][variableNameZ]
-		tDict = self.odtFiles[odtFileName]["{Oxs_TimeDriver::Simulation time}"]
+		tDict = self.odtFiles[odtFileName][parameterName]
 		
 		x = xDict["data"]
 		xLabel = self.replaceHeader(variableNameX)
@@ -127,7 +128,7 @@ class Plotter():
 		zUnit = self.replaceHeader(zDict["unit"])
 
 		t = tDict["data"]
-		tLabel = "{Oxs_TimeDriver::Simulation time}"
+		tLabel = self.replaceHeader(parameterName)
 		tUnit = self.replaceHeader(tDict["unit"])
 		
 		if "scalingFunction" in plotConfig:
@@ -183,7 +184,7 @@ odtPlots=plottingConfig["odtPlots"]
 
 plotter = Plotter(outputDataOdtFilePath, plottingConfig)
 
-for plotName, plotConfig in odtPlots.items():
+for plotConfig in odtPlots:
 	if plotConfig["dim"] == "2D":
 		plotter.drowFunctionOfVariables(plotConfig , plotConfig["outputFile"].format(outputPlotsDirPath))
 	elif plotConfig["dim"] == "3D":
