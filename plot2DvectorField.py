@@ -39,7 +39,7 @@ def getXYsliceFrom3Ddata(nx, ny, z, data):
 	xy2DsliceXdata=[]
 	xy2DsliceYdata=[]
 	data=data[nx*ny*z:nx*ny*(z+1)]
-	for y in range(nx):
+	for y in range(ny):
 		yLinexy2DsliceXdatadata = []
 		yLinexy2DsliceYdatadata = []
 		for x in range(nx):
