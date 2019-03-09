@@ -93,14 +93,6 @@ class Plotter():
 		plt.savefig(outputFile)
 		plt.close()
 
-	"""def animate(self, i, x, y, z, ax, fig):
-		ax.clear()
-		ax.plot(x[:i], y[:i], z[:i])
-		ax.legend()
-		plt.xlabel("{} [1]".format("mx"))
-		plt.ylabel("{} [1]".format("my"))
-		ax.set_zlabel("{} [1]".format("mz"))"""
-
 	def drowFunctionForVariableSet(self, variableSet, outputFile):
 		odtSource = variableSet["odtSource"]
 		label = variableSet["label"]
@@ -143,8 +135,19 @@ class Plotter():
 		plt.tight_layout()
 		plt.savefig(outputFile)
 		plt.close()
+		
+	def makeTrajectoryAniation(self, framesLen, plotConfig, legendLabel, fps, outputFile):
+		fig = plt.figure()
+		ax = fig.gca(projection='3d')
+		ani = animation.FuncAnimation(fig, self.animateTrajectory , frames = framesLen, fargs = (plotConfig, legendLabel, ax, fig))
+		ani.save(outputFile, fps=fps)
+		plt.close()
+		
+	def animateTrajectory(self, i, plotConfig, legendLabel, ax, fig):
+		ax.clear()
+		self.drowSingleTrajcetory(ax, plotConfig, legendLabel, i, True)
 
-	def drowSingleTrajcetory(self, ax, plotConfig, odtData, legendLabel):
+	def drowSingleTrajcetory(self, ax, plotConfig, legendLabel, i=0, isAnimation = False):
 		variableNameX = plotConfig["variableNameX"]
 		variableNameY = plotConfig["variableNameY"]
 		variableNameZ = plotConfig["variableNameZ"]
@@ -177,7 +180,11 @@ class Plotter():
 			y = [scalingFunction(f) for f in y]
 			z = [scalingFunction(f) for f in z]
 
-		ax.plot(x, y, z, label=legendLabel)
+		if isAnimation:
+			ax.plot(x[:i], y[:i], z[:i], label=legendLabel)
+		else:
+			ax.plot(x, y, z, label=legendLabel)
+			
 		plt.xlabel("{} [{}]".format(xLabel,xUnit))
 		plt.ylabel("{} [{}]".format(yLabel,yUnit))
 		ax.set_zlabel("{} [{}]".format(zLabel,zUnit))
@@ -187,19 +194,13 @@ class Plotter():
 		fig.clf()
 		ax = fig.gca(projection='3d')
 		ax.clear()
-		for legendLabel, odtData in sorted(self.odtFiles.items()):
-			self.drowSingleTrajcetory(ax, plotConfig, odtData, legendLabel)
+		for legendLabel in sorted(self.odtFiles):
+			self.drowSingleTrajcetory(ax, plotConfig, legendLabel)
 		plt.legend()
 
 		plt.tight_layout()
 		plt.savefig(outputFile)
 		plt.close()
-		
-		"""fig = plt.figure()
-		ax = fig.gca(projection='3d')
-		ani = animation.FuncAnimation(fig, animate , frames = len(x), fargs = (x, y, z, ax, fig))
-		ani.save(outputFile+".mp4", fps=int(self.plottingConfig["framesPerSecond"]))
-		plt.close()"""
 
 thisScritDirPath = os.getcwd()
 workMode = sys.argv[1]
@@ -208,7 +209,7 @@ configFile = sys.argv[3]
 parametersPathElement = sys.argv[4]
 
 outputDataDirPath = thisScritDirPath+"/"+symulationName+"/"+parametersPathElement
-outputPlotsDirPath = thisScritDirPath+"/plots_tmp/"+symulationName+"/"+parametersPathElement
+outputPlotsDirPath = thisScritDirPath+"/"+symulationName+"_plots/"+parametersPathElement
 outputDataOdtFilePath = outputDataDirPath+"/"+symulationName+".odt"
 
 try:
@@ -222,6 +223,7 @@ configFileJson = json.loads(configFileStr)
 plottingConfig = configFileJson["plot"]
 odtPlots=plottingConfig["odtPlots"]
 odtSources=plottingConfig["odtSources"]
+makeAnimations=plottingConfig["makeAnimations"]
 
 plotter = None
 if workMode == "usePathOdt":
@@ -229,25 +231,33 @@ if workMode == "usePathOdt":
 else:
 	plotter = Plotter(odtSources, plottingConfig)
 
+#plot single variables for odt file(s)
 for plotConfig in odtPlots:
 	if plotConfig["dim"] == "2D":
 		plotter.drowFunctionForAllOdts(plotConfig , plotConfig["outputFile"].format(outputPlotsDirPath))
 	elif plotConfig["dim"] == "3D":
 		plotter.drowTrajectoryForAllOdts(plotConfig , plotConfig["outputFile"].format(outputPlotsDirPath))
 
+#plot variable sets for odt file(s)
 variableSets = plottingConfig["variableSets"]
 for variableSet in variableSets:
 	if workMode == "usePathOdt":
 		variableSet["odtSource"] = ""
 	plotter.drowFunctionForVariableSet(variableSet, variableSet["outputFile"].format(outputPlotsDirPath))
-	
+
+#plot magnetization avarages for layers
 if plottingConfig["plotLayersAvg"]:
 	layerAvgConfigs = plottingConfig["layerAvgConfigs"]
 	for layerAvgConfig in layerAvgConfigs:
 		plotter.drowAvgMagOfSpecificLayerInTime(layerAvgConfig, outputDataDirPath+"/*.omf", layerAvgConfig["outputFile"].format(outputPlotsDirPath))
+		
+#make trajectory animation(s)
+if makeAnimations:
+	for legendLabel, odtData in sorted(plotter.odtFiles.items()):
+		framesLen = len(odtData[plotConfig["variableNameX"]]["data"])
+		plotter.makeTrajectoryAniation(framesLen, plotConfig, legendLabel, int(plottingConfig["framesPerSecond"]), outputPlotsDirPath+"/magnetization_trajectory.mp4")
 
 zSlices=plottingConfig["zSlices"]
-makeAnimations=plottingConfig["makeAnimations"]
 stepOverFrames=plottingConfig["stepOverFrames"]
 
 for z in zSlices:
