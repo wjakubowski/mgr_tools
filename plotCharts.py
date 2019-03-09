@@ -10,19 +10,18 @@ import matplotlib.animation as animation
 
 from plot2DvectorField import makeAnimation as makeAnimation
 from plot2DvectorField import drowAllMatched2DvectorFields as drowAllMatched2DvectorFields
+from plot2DvectorField import loadLayerMeansOFVectorField as loadLayerMeansOFVectorField
+
+matplotlib.rcParams.update({'font.size': 12})
 
 class Plotter():
 
-	def __init__(self, odtFileName, plottingConfig):
-		self.odtFileName = odtFileName
+	def __init__(self, odtSources, plottingConfig):
 		self.plottingConfig = plottingConfig
 		self.headersMap = self.plottingConfig["headersMap"]
 		self.odtFiles = {}
-		if self.plottingConfig["multiPlotMode"]:
-			for	legendLabel, odtPath in plottingConfig["odtSources"].items():
-				self.odtFiles[odtPath] = self.readOdtFile(odtPath)
-		else:
-			self.odtFiles[odtFileName] = self.readOdtFile(self.odtFileName)
+		for	legendLabel, odtPath in odtSources.items():
+			self.odtFiles[legendLabel] = self.readOdtFile(odtPath)
 
 	def readOdtFile(self, odtFileName):
 		odtColumnsDict = {}
@@ -61,12 +60,12 @@ class Plotter():
 		else: 
 			return headerName
 							
-	def drowSinglePlot(self, plotConfig, odtFileName, legendLabel = ""):
+	def drowSinglePlot(self, plotConfig, odtData, legendLabel = ""):
 		variableNameX = plotConfig["variableNameX"]
 		variableNameY = plotConfig["variableNameY"]
 		
-		xDict = self.odtFiles[odtFileName][variableNameX]
-		yDict = self.odtFiles[odtFileName][variableNameY]
+		xDict = odtData[variableNameX]
+		yDict = odtData[variableNameY]
 		
 		x = xDict["data"]
 		xLabel = self.replaceHeader(variableNameX)
@@ -84,15 +83,13 @@ class Plotter():
 		plt.xlabel("{} [{}]".format(xLabel,xUnit))
 		plt.ylabel("{} [{}]".format(yLabel,yUnit))
 							
-	def drowFunctionOfVariables(self, plotConfig, outputFile):
+	def drowFunctionForAllOdts(self, plotConfig, outputFile):
 		plt.figure().clf()
-		if plottingConfig["multiPlotMode"]:
-			for legendLabel, odtPath in plottingConfig["odtSources"].items():
-				self.drowSinglePlot(plotConfig, odtPath, legendLabel)
-			plt.legend()
-		else:
-			self.drowSinglePlot(plotConfig, self.odtFileName)
+		for legendLabel, odtData in sorted(self.odtFiles.items()):
+			self.drowSinglePlot(plotConfig, odtData, legendLabel)
+		plt.legend()
 	
+		plt.tight_layout()
 		plt.savefig(outputFile)
 		plt.close()
 
@@ -104,16 +101,59 @@ class Plotter():
 		plt.ylabel("{} [1]".format("my"))
 		ax.set_zlabel("{} [1]".format("mz"))"""
 
-	def drowSingleTrajcetory(self, ax, plotConfig, odtFileName, legendLabel = ""):
+	def drowFunctionForVariableSet(self, variableSet, outputFile):
+		odtSource = variableSet["odtSource"]
+		label = variableSet["label"]
+		commonConfig = variableSet["commonConfig"]
+		variables = variableSet["variables"]
+		plotConfigs = {}
+		for variableLabel, variableDict in variables.items():
+			plotConfigs[variableLabel] = dict(commonConfig, **variableDict)
+			
+		plt.figure().clf()
+		for legendLabel, plotConfig in sorted(plotConfigs.items()):
+			self.drowSinglePlot(plotConfig, self.odtFiles[odtSource], legendLabel)
+		plt.legend()
+		
+		plt.ylabel(label)
+		plt.tight_layout()
+		plt.savefig(outputFile)
+		plt.close()
+
+	def drowAvgMagOfSpecificLayerInTime(self, layerAvgConfigs, matcher, outputFile):
+		Ms = layerAvgConfigs["Ms"]
+		vectorComponent = layerAvgConfigs["vectorComponent"]
+		layerLabelDict = layerAvgConfigs["layerLabelDict"]
+		stepOverFrames = layerAvgConfigs["stepOverFrames"]
+		label = layerAvgConfigs["label"]
+
+		data = loadLayerMeansOFVectorField(matcher, Ms, stepOverFrames)
+			
+		plt.figure().clf()
+		
+		for layer, layerLabel in layerLabelDict.items():
+			layer = int(layer)
+			plt.plot(data[layer]["t"], data[layer][vectorComponent], label=layerLabel)
+
+		plt.legend()
+				
+		plt.xlabel("t [s]")
+		plt.ylabel(label)
+
+		plt.tight_layout()
+		plt.savefig(outputFile)
+		plt.close()
+
+	def drowSingleTrajcetory(self, ax, plotConfig, odtData, legendLabel):
 		variableNameX = plotConfig["variableNameX"]
 		variableNameY = plotConfig["variableNameY"]
 		variableNameZ = plotConfig["variableNameZ"]
 		parameterName = "{Oxs_TimeDriver::Simulation time}"
 		
-		xDict = self.odtFiles[odtFileName][variableNameX]
-		yDict = self.odtFiles[odtFileName][variableNameY]
-		zDict = self.odtFiles[odtFileName][variableNameZ]
-		tDict = self.odtFiles[odtFileName][parameterName]
+		xDict = self.odtFiles[legendLabel][variableNameX]
+		yDict = self.odtFiles[legendLabel][variableNameY]
+		zDict = self.odtFiles[legendLabel][variableNameZ]
+		tDict = self.odtFiles[legendLabel][parameterName]
 		
 		x = xDict["data"]
 		xLabel = self.replaceHeader(variableNameX)
@@ -142,17 +182,16 @@ class Plotter():
 		plt.ylabel("{} [{}]".format(yLabel,yUnit))
 		ax.set_zlabel("{} [{}]".format(zLabel,zUnit))
 			
-	def drowTrajectory(self, plotConfig, outputFile):
+	def drowTrajectoryForAllOdts(self, plotConfig, outputFile):
 		fig = plt.figure()
 		fig.clf()
 		ax = fig.gca(projection='3d')
 		ax.clear()
-		if plottingConfig["multiPlotMode"]:
-			for legendLabel, odtPath in sorted(plottingConfig["odtSources"].items()):
-				self.drowSingleTrajcetory(ax, plotConfig, odtPath, legendLabel)
-			plt.legend()
-		else:
-			self.drowSingleTrajcetory(ax, plotConfig, self.odtFileName)
+		for legendLabel, odtData in sorted(self.odtFiles.items()):
+			self.drowSingleTrajcetory(ax, plotConfig, odtData, legendLabel)
+		plt.legend()
+
+		plt.tight_layout()
 		plt.savefig(outputFile)
 		plt.close()
 		
@@ -163,8 +202,11 @@ class Plotter():
 		plt.close()"""
 
 thisScritDirPath = os.getcwd()
-symulationName = sys.argv[1]
-parametersPathElement = sys.argv[2]
+workMode = sys.argv[1]
+symulationName = sys.argv[2]
+configFile = sys.argv[3]
+parametersPathElement = sys.argv[4]
+
 outputDataDirPath = thisScritDirPath+"/"+symulationName+"/"+parametersPathElement
 outputPlotsDirPath = thisScritDirPath+"/plots_tmp/"+symulationName+"/"+parametersPathElement
 outputDataOdtFilePath = outputDataDirPath+"/"+symulationName+".odt"
@@ -173,42 +215,60 @@ try:
 	os.makedirs(outputPlotsDirPath)
 except:
 	pass
-	
-configFile = symulationName + ".json"
+
 configFileStr = open(configFile).read()
 configFileJson = json.loads(configFileStr)
 
 plottingConfig = configFileJson["plot"]
-"""z=int(plottingConfig["zSlice"])"""
 odtPlots=plottingConfig["odtPlots"]
+odtSources=plottingConfig["odtSources"]
 
-plotter = Plotter(outputDataOdtFilePath, plottingConfig)
+plotter = None
+if workMode == "usePathOdt":
+	plotter = Plotter({"":outputDataOdtFilePath}, plottingConfig)
+else:
+	plotter = Plotter(odtSources, plottingConfig)
 
 for plotConfig in odtPlots:
 	if plotConfig["dim"] == "2D":
-		plotter.drowFunctionOfVariables(plotConfig , plotConfig["outputFile"].format(outputPlotsDirPath))
+		plotter.drowFunctionForAllOdts(plotConfig , plotConfig["outputFile"].format(outputPlotsDirPath))
 	elif plotConfig["dim"] == "3D":
-		plotter.drowTrajectory(plotConfig , plotConfig["outputFile"].format(outputPlotsDirPath))
+		plotter.drowTrajectoryForAllOdts(plotConfig , plotConfig["outputFile"].format(outputPlotsDirPath))
+
+variableSets = plottingConfig["variableSets"]
+for variableSet in variableSets:
+	if workMode == "usePathOdt":
+		variableSet["odtSource"] = ""
+	plotter.drowFunctionForVariableSet(variableSet, variableSet["outputFile"].format(outputPlotsDirPath))
+	
+if plottingConfig["plotLayersAvg"]:
+	layerAvgConfigs = plottingConfig["layerAvgConfigs"]
+	for layerAvgConfig in layerAvgConfigs:
+		plotter.drowAvgMagOfSpecificLayerInTime(layerAvgConfig, outputDataDirPath+"/*.omf", layerAvgConfig["outputFile"].format(outputPlotsDirPath))
+
+zSlices=plottingConfig["zSlices"]
+makeAnimations=plottingConfig["makeAnimations"]
+stepOverFrames=plottingConfig["stepOverFrames"]
+
+for z in zSlices:
+	if makeAnimations:
+		makeAnimation(outputDataDirPath+"/*.omf", z, outputPlotsDirPath+"/magnetization{}.mp4".format(z), stepOverFrames)
+		makeAnimation(outputDataDirPath+"/*.ovf", z, outputPlotsDirPath+"/spin_torque{}.mp4".format(z), stepOverFrames)
+	
+	if plottingConfig["drawSingleFrames"]:
+		magnetizationDir = outputPlotsDirPath+"/magnetization{}".format(z)
+		try:
+			os.makedirs(magnetizationDir)
+			drowAllMatched2DvectorFields(outputDataDirPath+"/*.omf", z, magnetizationDir)
+		except:
+			print "Can't create magnetization frames!"
+		
+		spinTorqueDir = outputPlotsDirPath+"/spin_torque{}".format(z)
+		try:
+			os.makedirs(spinTorqueDir)
+			drowAllMatched2DvectorFields(outputDataDirPath+"/*.ovf", z, spinTorqueDir)
+		except:
+			print "Can't create spin_torque frames!"
 
 
-"""if plottingConfig["drawSingleFrames"]:
-	try:
-		os.makedirs(outputPlotsDirPath+"/magnetization")
-	except:
-		pass
-	drowAllMatched2DvectorFields(outputDataDirPath+"/*.ovf", z, outputPlotsDirPath+"/spin_torque")
-	try:
-		os.makedirs(outputPlotsDirPath+"/spin_torque")
-	except:
-		pass
-	drowAllMatched2DvectorFields(outputDataDirPath+"/*.omf", z, outputPlotsDirPath+"/magnetization")"""
-
-"""try:
-	makeAnimation(outputDataDirPath+"/*.omf", z, outputPlotsDirPath+"/magnetization.mp4")
-except IndexError:
-	pass
-try:
-	makeAnimation(outputDataDirPath+"/*.ovf", z, outputPlotsDirPath+"/spin_torque.mp4")
-except IndexError:
-	pass"""
 	

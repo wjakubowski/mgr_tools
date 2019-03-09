@@ -3,6 +3,7 @@ matplotlib.use('Agg')
 from matplotlib import pyplot as plt
 import matplotlib.animation as animation
 import numpy as np
+from numpy import mean as mean
 import glob, os
 
 def readInfoDataFromFile(fileName):
@@ -38,16 +39,20 @@ def read3DdataFromFile(fileName):
 def getXYsliceFrom3Ddata(nx, ny, z, data):
 	xy2DsliceXdata=[]
 	xy2DsliceYdata=[]
+	xy2DsliceZdata=[]
 	data=data[nx*ny*z:nx*ny*(z+1)]
 	for y in range(ny):
 		yLinexy2DsliceXdatadata = []
 		yLinexy2DsliceYdatadata = []
+		yLinexy2DsliceZdatadata = []
 		for x in range(nx):
 			yLinexy2DsliceXdatadata.append(data[nx*y+x][0])
 			yLinexy2DsliceYdatadata.append(data[nx*y+x][1])
+			yLinexy2DsliceZdatadata.append(data[nx*y+x][2])
 		xy2DsliceXdata.append(yLinexy2DsliceXdatadata)
 		xy2DsliceYdata.append(yLinexy2DsliceYdatadata)
-	return [xy2DsliceXdata, xy2DsliceYdata]	
+		xy2DsliceZdata.append(yLinexy2DsliceZdatadata)
+	return [xy2DsliceXdata, xy2DsliceYdata, xy2DsliceZdata]	
 	
 ############################################################################################################
 
@@ -76,19 +81,39 @@ def drowAllMatched2DvectorFields(dataFileMatcher, z, outputDir):
 		file = file[:-4]
 		plt.savefig(outputDir+"/"+file+".png")
 		plt.close()
+		
+def loadLayerMeansOFVectorField(dataFileMatcher, Ms = 1,stepOverFrames=1):
+	dataFiles = sorted(glob.glob(dataFileMatcher))
+	dataInfo0 = readInfoDataFromFile(dataFiles[0])
+	outputDict = dataInfo0
+	outputDict["matcher"] = dataFileMatcher
+	znodes = int(dataInfo0["znodes"])
+	for z in range(znodes):
+		outputDict[z] = {"t":[],"x":[],"y":[],"z":[]}
+	for i in range(len(dataFiles)/stepOverFrames):
+		data = read3DdataFromFile(dataFiles[i*stepOverFrames])
+		dataInfo = readInfoDataFromFile(dataFiles[i*stepOverFrames])
+		for z in range(znodes):
+			[xy2DsliceXdata, xy2DsliceYdata, xy2DsliceZdata ] = getXYsliceFrom3Ddata(int(dataInfo["xnodes"]), int(dataInfo["ynodes"]), z, data)
+			outputDict[z]["t"].append(float(dataInfo["Total simulation time"][:-2]))
+			outputDict[z]["x"].append(mean(xy2DsliceXdata)/Ms)
+			outputDict[z]["y"].append(mean(xy2DsliceYdata)/Ms)
+			outputDict[z]["z"].append(mean(xy2DsliceZdata)/Ms)
+		
+	return outputDict
 	
-def animate2DvectorField(i, z, dataFiles, ax, fig):
+def animate2DvectorField(i, z, dataFiles, stepOverFrames, ax, fig):
 	ax.clear()
-	data = read3DdataFromFile(dataFiles[i])
-	dataInfo = readInfoDataFromFile(dataFiles[i])
-	[xy2DsliceXdata, xy2DsliceYdata ] = getXYsliceFrom3Ddata(int(dataInfo["xnodes"]), int(dataInfo["ynodes"]), z, data)
+	data = read3DdataFromFile(dataFiles[i*stepOverFrames])
+	dataInfo = readInfoDataFromFile(dataFiles[i*stepOverFrames])
+	[xy2DsliceXdata, xy2DsliceYdata, xy2DsliceZdata] = getXYsliceFrom3Ddata(int(dataInfo["xnodes"]), int(dataInfo["ynodes"]), z, data)
 	drow2DvectorField(fig, ax, xy2DsliceXdata, xy2DsliceYdata, dataInfo)
 	
-def makeAnimation(dataFileMatcher, z, outputFile):
+def makeAnimation(dataFileMatcher, z, outputFile, stepOverFrames = 1):
 	fig, ax = plt.subplots()
 	dataFiles = glob.glob(dataFileMatcher)
 	dataFiles.sort()
-	ani = animation.FuncAnimation(fig, animate2DvectorField, interval=300, fargs=(z, dataFiles, ax, fig))
+	ani = animation.FuncAnimation(fig, animate2DvectorField, interval=300, frames = len(dataFiles)/stepOverFrames, fargs=(z, dataFiles, stepOverFrames, ax, fig))
 	ani.save(outputFile)
 	plt.close()
 	
@@ -101,7 +126,7 @@ if __name__ == "__main__":
 	dataFiles = glob.glob("./example_vector_output.omf");
 	data = read3DdataFromFile(dataFiles[0])	
 	dataInfo = readInfoDataFromFile(dataFiles[0])
-	[xy2DsliceXdata, xy2DsliceYdata] = getXYsliceFrom3Ddata(int(dataInfo["xnodes"]), int(dataInfo["ynodes"]), z, data)
+	[xy2DsliceXdata, xy2DsliceYdata, xy2DsliceZdata] = getXYsliceFrom3Ddata(int(dataInfo["xnodes"]), int(dataInfo["ynodes"]), z, data)
 	fig, ax = plt.subplots()
 	drow2DvectorField(fig, ax, xy2DsliceXdata, xy2DsliceYdata, dataInfo)
 	plt.savefig("zdzisek.png")

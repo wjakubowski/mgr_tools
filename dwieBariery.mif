@@ -2,16 +2,23 @@
 # Created with MAGE tool
 Parameter Voltage 
 Parameter freeAniz 20000
+Parameter pinnedAniz 500000
 Parameter output_file 
 Parameter mtop -1
 Parameter mxfree
 Parameter myfree 0
+Parameter mzfree 0
 Parameter mbottom 1
 Parameter stoppingTime 5e-9
 Parameter timeStep 1e-13
 Parameter scheduleStep
 Parameter vecFieldScheduleStep
 Parameter VProfileType
+Parameter xSize 140.0e-9
+Parameter sigma_1_IEC 0
+Parameter anizAxesX 1
+Parameter anizAxesY 0
+Parameter anizAxesZ 0
 
 proc EllipseZ { x y z } {
 set r1 [expr 2.*$x -1. ]
@@ -31,50 +38,50 @@ SetOptions [subst {
  vector_field_output_meshtype rectangular
 } ]
 
-Specify Oxs_ScriptAtlas:top {
-xrange {0e-9 70e-9}
+Specify Oxs_ScriptAtlas:top [subst {
+xrange {0e-9 $xSize}
 yrange {0e-9 70e-9}
 zrange {6.0e-9 8.0e-9}
 regions {top emptytop}
 script_args { relpt }
 script EllipseZ
-}
+} ]
 
-Specify Oxs_ScriptAtlas:spacer_top {
-xrange {0e-9 70e-9}
+Specify Oxs_ScriptAtlas:spacer_top [subst {
+xrange {0e-9 $xSize}
 yrange {0e-9 70e-9}
 zrange {5.0e-9 6.0e-9}
 regions {spacer_top emptyspacer_top}
 script_args { relpt }
 script EllipseZ
-}
+} ]
 
-Specify Oxs_ScriptAtlas:free {
-xrange {0e-9 70e-9}
+Specify Oxs_ScriptAtlas:free [subst {
+xrange {0e-9 $xSize}
 yrange {0e-9 70e-9}
 zrange {3.0e-9 5.0e-9}
 regions {free emptyfree}
 script_args { relpt }
 script EllipseZ
-}
+} ]
 
-Specify Oxs_ScriptAtlas:spacer_bottom {
-xrange {0e-9 70e-9}
+Specify Oxs_ScriptAtlas:spacer_bottom [subst {
+xrange {0e-9 $xSize}
 yrange {0e-9 70e-9}
 zrange {2.0e-9 3.0e-9}
 regions {spacer_bottom emptyspacer_bottom}
 script_args { relpt }
 script EllipseZ
-}
+} ]
 
-Specify Oxs_ScriptAtlas:bottom {
-xrange {0e-9 70e-9}
+Specify Oxs_ScriptAtlas:bottom [subst {
+xrange {0e-9 $xSize}
 yrange {0e-9 70e-9}
 zrange {0e-9 2.0e-9}
 regions {bottom emptybottom}
 script_args { relpt }
 script EllipseZ
-}
+} ]
 
 Specify Oxs_MultiAtlas:multiatlas1 {
 
@@ -97,18 +104,18 @@ K1 { Oxs_AtlasScalarField {
  atlas :multiatlas1
  default_value 0
  values {
- top 500e3
+ top $pinnedAniz
  free $freeAniz
- bottom 500e3
+ bottom $pinnedAniz
 }
 }}
  axis { Oxs_AtlasVectorField {
  atlas :multiatlas1
  default_value { 1 0 0 }
  values {
- top { 1 0 0 }
- free { 1 0 0 }
- bottom { 1 0 0 }
+ top { $anizAxesX $anizAxesY $anizAxesZ }
+ free { $anizAxesX $anizAxesY $anizAxesZ }
+ bottom { $anizAxesX $anizAxesY $anizAxesZ }
 }
 }}
 }]
@@ -184,9 +191,59 @@ proc MVoltage { total_time } {
 		}
 		return 0
 	}
+	
+	if {$VProfileType == 5} {
+		if {$total_time < $stoppingTime*0.2} {
+			return 0 
+		}
+		if {$total_time > $stoppingTime*0.8} {
+			return 0 
+		}
+		return $Voltage
+	}
 
 	return $Voltage
 }
+
+Specify Oxs_TwoSurfaceExchange:IEC_top_free [subst {
+ sigma $sigma_1_IEC
+ comment {sigma2 -1e-4}
+
+ surface1 {
+  atlas :multiatlas1
+  region top
+  scalarfield :zheight
+  scalarvalue 6.0e-9
+  scalarside +
+ }
+ surface2 {
+  atlas :multiatlas1
+  region free
+  scalarfield :zheight
+  scalarvalue 5.0e-9
+  scalarside -
+ }
+}]
+
+Specify Oxs_TwoSurfaceExchange:IRC_free_bottom [subst {
+ sigma $sigma_1_IEC
+ comment {sigma2 -1e-4}
+
+ surface1 {
+  atlas :multiatlas1
+  region free
+  scalarfield :zheight
+  scalarvalue 3.0e-9
+  scalarside +
+ }
+ surface2 {
+  atlas :multiatlas1
+  region bottom
+  scalarfield :zheight
+  scalarvalue 2.0e-9
+  scalarside -
+ }
+}]
 
 Specify MF_CurrentFlowEvolver [subst {
   do_precess 1
@@ -272,7 +329,7 @@ bottom 1000e3
  default_value { 1 0 0 }
  values {
 top { $mtop 0 0 }
-free { $mxfree $mxfree 0 }
+free { $mxfree $myfree $mzfree }
 bottom { $mbottom 0 0 }
 }}}
  evolver MF_CurrentFlowEvolver
@@ -283,5 +340,5 @@ bottom { $mbottom 0 0 }
 Destination archive mmArchive
 
 Schedule DataTable archive step $scheduleStep
-Schedule MF_CurrentFlowEvolver::Spin_torque archive step $vecFieldScheduleStep
+Schedule {MF_CurrentFlowEvolver::Spin torque} archive step $vecFieldScheduleStep
 Schedule Oxs_TimeDriver::Magnetization archive step $vecFieldScheduleStep

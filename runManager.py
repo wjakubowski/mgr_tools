@@ -27,11 +27,12 @@ def createParamSuitsFromParamRanges(paramRanges):
 	return paramSuits
 
 symulationName = sys.argv[1]
+configFile = sys.argv[2]
+mifFilePath = sys.argv[3]
 symulationDirectory = "./"+symulationName
 
 thisScritDirPath = os.getcwd()
 
-configFile = symulationName + ".json"
 configFileStr = open(configFile).read()
 configFileJson = json.loads(configFileStr)
 
@@ -62,13 +63,7 @@ for paramName, paramProperties in symulationParameters.iteritems():
 		elif(paramProperties["type"] == "script"):
 			silentParams.append((paramName, eval(paramProperties["value"]) ) )
 
-"""
-silentParams.append(("scheduleStep", max(1, int(stoppingTime/timeStep/numberOfPoints) ) ) )
-silentParams.append(("magnetizationScheduleStep", max(1, int(stoppingTime/timeStep/numberOfMagMaps) ) ) )"""
-
-mifFilePath = "./{}.mif".format(symulationName)
 scriptFilePath = "./skrypt.txt"
-##################################################################################################
 
 #read template of shell script file
 scriptStr = ""
@@ -113,11 +108,11 @@ for parameters in symulParamGrid:
 	scriptPath = '{}/skrypt.sh'.format(currentWorkDir)
 	with open(scriptPath,'w') as f:
 		f.write(scriptStr.format(parametersPathElement=parametersPathElement, currentWorkDir=currentWorkDir, mifFilePath=mifFilePath, outputOdtFilePath=outputOdtFilePath, \
-			mifParametersStr = mifParametersStr, oommfPath=oommfPath, thisScritDirPath=thisScritDirPath, symulationName=symulationName, \
+			mifParametersStr = mifParametersStr, oommfPath=oommfPath, thisScritDirPath=thisScritDirPath, symulationName=symulationName, configFile=configFile, \
 			doSymulation = doSymulation, doPloting = doPloting, grant = grant, partition = partition, maxSimulationTime = maxSimulationTime))
 	
-	shutil.copy(mifFilePath, "{}/{}".format(currentWorkDir, symulationName+".mif"))
-	shutil.copy(configFile, "{}/{}".format(currentWorkDir, symulationName+".json"))
+	shutil.copy(mifFilePath, "{}/{}".format(currentWorkDir, mifFilePath))
+	shutil.copy(configFile, "{}/{}".format(currentWorkDir, configFile))
 			
 	command = "sbatch {} ".format(scriptPath)
 	print "\nTerminal command:\n", command , '\n'
