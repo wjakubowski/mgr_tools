@@ -1,6 +1,7 @@
 import os, re, sys
 import numpy as np
 import json
+from shutil import rmtree
 
 import matplotlib
 matplotlib.use('Agg')
@@ -12,8 +13,6 @@ from plot2DvectorField import makeAnimation as makeAnimation
 from plot2DvectorField import drowAllMatched2DvectorFields as drowAllMatched2DvectorFields
 from plot2DvectorField import loadLayerMeansOFVectorField as loadLayerMeansOFVectorField
 
-matplotlib.rcParams.update({'font.size': 12})
-
 class Plotter():
 
 	def __init__(self, odtSources, plottingConfig):
@@ -22,6 +21,18 @@ class Plotter():
 		self.odtFiles = {}
 		for	legendLabel, odtPath in odtSources.items():
 			self.odtFiles[legendLabel] = self.readOdtFile(odtPath)
+			self.calculateTotalCurrentEnergy(legendLabel)
+
+	def calculateTotalCurrentEnergy(self, legendLabel):
+		E_curr = []
+		E_sum = 0
+		R = self.odtFiles[legendLabel]["{MF_CurrentFlowEvolver::total resistance}"]["data"]
+		V = self.odtFiles[legendLabel]["MF_CurrentFlowEvolver::Signal"]["data"]
+		dt = self.odtFiles[legendLabel]["{Oxs_TimeDriver::Last time step}"]["data"]
+		for i in range(len(R)):
+			E_sum += V[i]*V[i]/R[i]*dt[i]
+			E_curr.append(E_sum)
+		self.odtFiles[legendLabel]["TotalCurrentEnergy"] = {"unit":"J", "data":E_curr}
 
 	def readOdtFile(self, odtFileName):
 		odtColumnsDict = {}
@@ -221,9 +232,12 @@ configFileStr = open(configFile).read()
 configFileJson = json.loads(configFileStr)
 
 plottingConfig = configFileJson["plot"]
+fontSize=plottingConfig["fontSize"]
 odtPlots=plottingConfig["odtPlots"]
 odtSources=plottingConfig["odtSources"]
 makeAnimations=plottingConfig["makeAnimations"]
+
+matplotlib.rcParams.update({'font.size': fontSize})
 
 plotter = None
 if workMode == "usePathOdt":
@@ -262,21 +276,27 @@ stepOverFrames=plottingConfig["stepOverFrames"]
 
 for z in zSlices:
 	if makeAnimations:
-		makeAnimation(outputDataDirPath+"/*.omf", z, outputPlotsDirPath+"/magnetization{}.mp4".format(z), stepOverFrames)
-		makeAnimation(outputDataDirPath+"/*.ovf", z, outputPlotsDirPath+"/spin_torque{}.mp4".format(z), stepOverFrames)
+		makeAnimation(outputDataDirPath+"/*.omf", z, outputPlotsDirPath+"/magnetization{}.mp4".format(z), plotter.headersMap, stepOverFrames)
+		makeAnimation(outputDataDirPath+"/*.ovf", z, outputPlotsDirPath+"/spin_torque{}.mp4".format(z), plotter.headersMap, stepOverFrames)
 	
 	if plottingConfig["drawSingleFrames"]:
 		magnetizationDir = outputPlotsDirPath+"/magnetization{}".format(z)
+		print(magnetizationDir)
+		if os.path.exists(magnetizationDir):
+			rmtree(magnetizationDir)
+		os.makedirs(magnetizationDir)
 		try:
-			os.makedirs(magnetizationDir)
-			drowAllMatched2DvectorFields(outputDataDirPath+"/*.omf", z, magnetizationDir)
+			drowAllMatched2DvectorFields(outputDataDirPath+"/*.omf", z, magnetizationDir, plotter.headersMap)
 		except:
 			print "Can't create magnetization frames!"
-		
+			
 		spinTorqueDir = outputPlotsDirPath+"/spin_torque{}".format(z)
+		print(spinTorqueDir)
+		if os.path.exists(spinTorqueDir):
+			rmtree(spinTorqueDir)
+		os.makedirs(spinTorqueDir)
 		try:
-			os.makedirs(spinTorqueDir)
-			drowAllMatched2DvectorFields(outputDataDirPath+"/*.ovf", z, spinTorqueDir)
+			drowAllMatched2DvectorFields(outputDataDirPath+"/*.ovf", z, spinTorqueDir, plotter.headersMap)
 		except:
 			print "Can't create spin_torque frames!"
 

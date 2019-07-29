@@ -56,30 +56,28 @@ def getXYsliceFrom3Ddata(nx, ny, z, data):
 	
 ############################################################################################################
 
-def drow2DvectorField(fig, ax, xy2DsliceXdata, xy2DsliceYdata, dataInfo):
+def drow2DvectorField(fig, ax, xy2DsliceXdata, xy2DsliceYdata, dataInfo, headersMap):
 	X, Y = np.meshgrid(np.arange(float(dataInfo["xmin"]), float(dataInfo["xmax"]), float(dataInfo["xstepsize"])), np.arange(float(dataInfo["xmin"]), float(dataInfo["xmax"]), float(dataInfo["xstepsize"])))
-	q=ax.quiver(X, Y, xy2DsliceXdata, xy2DsliceYdata)
+	ax.quiver(X, Y, xy2DsliceXdata, xy2DsliceYdata)
 	ax.legend()
-	plt.title("{}\nsimulation time: {}".format(dataInfo["Title"], dataInfo["Stage simulation time"]))
-	# valuelabels = dataInfo["valuelabels"].split()
-	# valueunits = dataInfo["valueunits"].split()
+	plt.title("{}\nczas: {}".format(headersMap[dataInfo["Title"]], dataInfo["Stage simulation time"]))
 	plt.xlabel("{} [{}]".format("x", dataInfo["meshunit"]))
 	plt.ylabel("{} [{}]".format("y", dataInfo["meshunit"]))
 	xmin, xmax = float(dataInfo["xmin"]), float(dataInfo["xmax"])
 	ymin, ymax = float(dataInfo["ymin"]), float(dataInfo["ymax"])
 	plt.axis(xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax, style="sci")
 
-def drowAllMatched2DvectorFields(dataFileMatcher, z, outputDir):
+def drowAllMatched2DvectorFields(dataFileMatcher, z, outputDir, headersMap):
 	dataFiles = glob.glob(dataFileMatcher)
-	fig, ax = plt.subplots()
 	for dataFile in dataFiles:
+		fig, ax = plt.subplots()
 		data = read3DdataFromFile(dataFile)
 		dataInfo = readInfoDataFromFile(dataFile)
-		[xy2DsliceXdata, xy2DsliceYdata ] = getXYsliceFrom3Ddata(int(dataInfo["xnodes"]), int(dataInfo["ynodes"]), z, data)
-		drow2DvectorField(fig, ax, xy2DsliceXdata, xy2DsliceYdata, dataInfo)
+		[xy2DsliceXdata, xy2DsliceYdata, xy2DsliceZdata] = getXYsliceFrom3Ddata(int(dataInfo["xnodes"]), int(dataInfo["ynodes"]), z, data)
+		drow2DvectorField(fig, ax, xy2DsliceXdata, xy2DsliceYdata, dataInfo, headersMap)
 		file = os.path.basename(dataFile)
 		file = file[:-4]
-		plt.savefig(outputDir+"/"+file+".png")
+		plt.savefig(outputDir+"/"+file+".pdf")
 		plt.close()
 		
 def loadLayerMeansOFVectorField(dataFileMatcher, Ms = 1,stepOverFrames=1):
@@ -102,35 +100,17 @@ def loadLayerMeansOFVectorField(dataFileMatcher, Ms = 1,stepOverFrames=1):
 		
 	return outputDict
 	
-def animate2DvectorField(i, z, dataFiles, stepOverFrames, ax, fig):
+def animate2DvectorField(i, z, dataFiles, stepOverFrames, ax, fig, headersMap):
 	ax.clear()
 	data = read3DdataFromFile(dataFiles[i*stepOverFrames])
 	dataInfo = readInfoDataFromFile(dataFiles[i*stepOverFrames])
 	[xy2DsliceXdata, xy2DsliceYdata, xy2DsliceZdata] = getXYsliceFrom3Ddata(int(dataInfo["xnodes"]), int(dataInfo["ynodes"]), z, data)
-	drow2DvectorField(fig, ax, xy2DsliceXdata, xy2DsliceYdata, dataInfo)
+	drow2DvectorField(fig, ax, xy2DsliceXdata, xy2DsliceYdata, dataInfo, headersMap)
 	
-def makeAnimation(dataFileMatcher, z, outputFile, stepOverFrames = 1):
+def makeAnimation(dataFileMatcher, z, outputFile, headersMap, stepOverFrames = 1):
 	fig, ax = plt.subplots()
 	dataFiles = glob.glob(dataFileMatcher)
 	dataFiles.sort()
-	ani = animation.FuncAnimation(fig, animate2DvectorField, interval=300, frames = len(dataFiles)/stepOverFrames, fargs=(z, dataFiles, stepOverFrames, ax, fig))
+	ani = animation.FuncAnimation(fig, animate2DvectorField, interval=300, frames = len(dataFiles)/stepOverFrames, fargs=(z, dataFiles, stepOverFrames, ax, fig, headersMap))
 	ani.save(outputFile)
 	plt.close()
-	
-	
-if __name__ == "__main__":
-	z=1
-	##################
-	print readInfoDataFromFile("example_vector_output.omf")
-	##################
-	dataFiles = glob.glob("./example_vector_output.omf");
-	data = read3DdataFromFile(dataFiles[0])	
-	dataInfo = readInfoDataFromFile(dataFiles[0])
-	[xy2DsliceXdata, xy2DsliceYdata, xy2DsliceZdata] = getXYsliceFrom3Ddata(int(dataInfo["xnodes"]), int(dataInfo["ynodes"]), z, data)
-	fig, ax = plt.subplots()
-	drow2DvectorField(fig, ax, xy2DsliceXdata, xy2DsliceYdata, dataInfo)
-	plt.savefig("zdzisek.png")
-	##################
-	makeAnimation("/net/archive/groups/plggspinsym/WJ/jednaBariera/myfree_0.5000_mxfree_0.8660_mxtop_1_VProfileType_6_Voltage_0.1500_/*.omf", z, "marian.mp4")
-	##################
-	drowAllMatched2DvectorFields("/net/archive/groups/plggspinsym/WJ/jednaBariera/myfree_0.5000_mxfree_0.8660_mxtop_1_VProfileType_6_Voltage_0.1500_/*.omf", z, "./xxx")

@@ -14,7 +14,7 @@ Parameter timeStep 1e-13
 Parameter scheduleStep
 Parameter vecFieldScheduleStep
 Parameter VProfileType
-Parameter xSize 140.0e-9
+Parameter xSize 70.0e-9
 Parameter sigma_1_IEC 0
 Parameter anizAxesX 1
 Parameter anizAxesY 0
@@ -143,7 +143,7 @@ proc MVoltage { total_time } {
 	global Voltage
 	global VProfileType
 	if {$VProfileType == 0} {
-		if {$total_time < $stoppingTime/5} {
+		if {$total_time < $stoppingTime/2} {
 			return 0 
 		}
 		return $Voltage

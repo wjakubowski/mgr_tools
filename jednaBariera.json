@@ -2,50 +2,105 @@
 	"symulation":{
 		"doSymulation":true,
 		"oommfPath":"/net/archive/groups/plggspinsym/WJ/OOMMF-SWAG/oommf.tcl",
-		"grant":"grant009",
-		"partition":"plgrid",
-		"maxSimulationTime":"4:00:00",
+		"grant":"grant011",
+		"partition":"plgrid-testing",
+		"maxSimulationTime":"1:00:00",
 		"mifParameters":{
-			"mxfree":						{"value":"[-math.sqrt(3)/2]", "precision": 4, "type": "script", "verbous": true},
-			"myfree":						{"value":0.5, "precision": 4, "type": "value", "verbous": true},
-			"VProfileType":					{"value":0, "precision": 0, "type": "value", "verbous": true},
-			"Voltage":						{"value":"[0.16]", "precision": 4, "type": "script", "verbous": true},
+			"freeAniz":						{"value":"[700]", "precision": 0, "type": "script", "verbous": true},
+			"pinnedAniz":					{"value":"[1600]", "precision": 0, "type": "script", "verbous": true},
+			"mxfree":						{"value":0.99, "precision": 4, "type": "value", "verbous": true},
+			"myfree":						{"value":0.01, "precision": 4, "type": "value", "verbous": true},
+			"mzfree":						{"value":0.01, "precision": 4, "type": "value", "verbous": true},
+			"VProfileType":					{"value":5, "precision": 0, "type": "value", "verbous": true},
+			"Voltage":						{"value":0.06, "precision": 4, "type": "value", "verbous": true},
 						
-			"stoppingTime":					{"value":1e-8, "type": "value", "verbous": false},
+			"stoppingTime":					{"value":2e-11, "type": "value", "verbous": false},
 			"timeStep":						{"value":1e-13, "type": "value", "verbous": false},
 			"scheduleStep":					{"value":10, "type": "value", "verbous": false},
-			"vecFieldScheduleStep":			{"value":1000, "type": "value", "verbous": false}
+			"vecFieldScheduleStep":			{"value":10, "type": "value", "verbous": false}
 		}
 	},
 	"plot":{
 		"doPloting":true,
-		"zSlice":1,
-		"framesPerSecond":5,
-		"drawSingleFrames":false,
+		"makeAnimations":true,
+		"framesPerSecond":1,
+		
 		"odtPlots":[
-			{"dim":"2D","variableNameX":"{Oxs_TimeDriver::Simulation time}", "variableNameY":"MF_CurrentFlowEvolver::Signal", "outputFile":"{}/napiecie.svg"},
-			{"dim":"2D","variableNameX":"{Oxs_TimeDriver::Simulation time}", "variableNameY":"{MF_CurrentFlowEvolver::total resistance}", "outputFile":"{}/opor.svg"},
-			{"dim":"2D","variableNameX":"{Oxs_TimeDriver::Simulation time}", "variableNameY":"Oxs_TimeDriver::mx", "outputFile":"{}/magnetyzacja_mx.svg", "scalingFunction":"lambda (x):(x*2.0-1.0)"},
-			{"dim":"2D","variableNameX":"MF_CurrentFlowEvolver::Signal", "variableNameY":"{MF_CurrentFlowEvolver::total resistance}", "outputFile":"{}/opor_napiecie.svg"},
-			{"dim":"3D","variableNameX":"Oxs_TimeDriver::mx", "variableNameY":"Oxs_TimeDriver::my", "variableNameZ":"Oxs_TimeDriver::mz", "outputFile":"{}/trajektoria_m.svg", "scalingFunction":"lambda (x):(x*2.0-1.0)"}
+			{"dim":"2D","variableNameX":"{Oxs_TimeDriver::Simulation time}", "variableNameY":"TotalCurrentEnergy", "outputFile":"{}/tot_curr_e.pdf"},
+			{"dim":"2D","variableNameX":"{Oxs_TimeDriver::Simulation time}", "variableNameY":"MF_CurrentFlowEvolver::Signal", "outputFile":"{}/napiecie.pdf"},
+			{"dim":"2D","variableNameX":"{Oxs_TimeDriver::Simulation time}", "variableNameY":"{MF_CurrentFlowEvolver::total resistance}", "outputFile":"{}/opor.pdf"},
+			{"dim":"3D","variableNameX":"Oxs_TimeDriver::mx", "variableNameY":"Oxs_TimeDriver::my", "variableNameZ":"Oxs_TimeDriver::mz", "outputFile":"{}/trajektoria_m.pdf", "scalingFunction":"lambda (x):(x)"}
 		],
+		
+		"odtSources":{
+		    "0.08V":"/net/archive/groups/plggspinsym/WJ/jednaBariera/myfree_0.5000_mxfree_-0.8660_VProfileType_0_Voltage_0.0800_/jednaBariera.odt",
+		    "0.12V":"/net/archive/groups/plggspinsym/WJ/jednaBariera/myfree_0.5000_mxfree_-0.8660_VProfileType_0_Voltage_0.1200_/jednaBariera.odt",
+		    "0.16V":"/net/archive/groups/plggspinsym/WJ/jednaBariera/myfree_0.5000_mxfree_-0.8660_VProfileType_0_Voltage_0.1600_/jednaBariera.odt"
+		},
+		
+		"variableSets":[
+			{
+				"odtSource":"700",
+				"outputFile":"{}/energie.pdf",
+				"label":"E [J]",
+				"commonConfig":{"dim":"2D", "variableNameX":"{Oxs_TimeDriver::Simulation time}"},
+				"variables":{
+					"$E_{calkowita}$":{"variableNameY":"{MF_CurrentFlowEvolver::Total energy}"},
+					"$E_{anizotropi}$":{"variableNameY":"Oxs_UniaxialAnisotropy:PMA:Energy"},
+					"$E_{wymiany}$":{"variableNameY":"Oxs_Exchange6Ngbr:Exchange:Energy"},
+					"$E_{demagntyzacji}$":{"variableNameY":"Oxs_Demag::Energy"}
+				}
+			},
+			{
+				"odtSource":"700",
+				"outputFile":"{}/magnetyzacje.pdf",
+				"label":"m [1]",
+				"commonConfig":{"dim":"2D", "variableNameX":"{Oxs_TimeDriver::Simulation time}"},
+				"variables":{
+					"$m_x$":{"variableNameY":"Oxs_TimeDriver::mx", "scalingFunction":"lambda (x):(x)"},
+					"$m_y$":{"variableNameY":"Oxs_TimeDriver::my", "scalingFunction":"lambda (x):(x)"},
+					"$m_z$":{"variableNameY":"Oxs_TimeDriver::mz", "scalingFunction":"lambda (x):(x)"}
+				}
+			}
+		],
+		
+		
+		"drawSingleFrames":true,
+		"zSlices":[3],
+		"stepOverFrames":1,
+		"fontSize":14,
+		
+		"plotLayersAvg":true,
+		"layerAvgConfigs":[
+			{
+				"label":"$m_x$ [1]",
+				"outputFile":"{}/mx_warstw.pdf",
+				"Ms":8e5,
+				"layerLabelDict":{"3":"w. swobodna", "1":"w. trwala gora"},
+				"vectorComponent":"x",
+				"stepOverFrames":1
+			}
+		],
+		
 		"headersMap":{
 			"{Oxs_TimeDriver::Simulation time}":"t",
 			"MF_CurrentFlowEvolver::Signal":"V",
 			"{MF_CurrentFlowEvolver::total resistance}":"R",
-			"Oxs_TimeDriver::mx":"$M_x$",
-			"Oxs_TimeDriver::my":"$M_y$",
-			"Oxs_TimeDriver::mz":"$M_z$",
+			"Oxs_TimeDriver::Magnetization":"Magnetyzacja",
+			"MF_CurrentFlowEvolver::Spin torque":"STT",
+			"Oxs_TimeDriver::mx":"$m_x$",
+			"Oxs_TimeDriver::my":"$m_y$",
+			"Oxs_TimeDriver::mz":"$m_z$",
+			"{MF_CurrentFlowEvolver::Total energy}":"$E_{calkowita}$",
+			"Oxs_UniaxialAnisotropy:PMA:Energy":"$E_{anizotropi}$",
+			"Oxs_Exchange6Ngbr:Exchange:Energy":"$E_{wymiany}$",
+			"Oxs_Demag::Energy":"$E_{demagntyzacji}$",
+			"Oxs_TwoSurfaceExchange:IEC_top_free:Energy":"$E_{IEC gora}$",
+			"Oxs_TwoSurfaceExchange:IRC_free_bottom:Energy":"$E_{IEC dol$",
 			
 			"Ohm":"$\\Omega$",
 			"{SI units}":"V",
 			"{}":"1"
-		},
-		"multiPlotMode":true,
-		"odtSources":{
-			"0.08V":"/net/archive/groups/plggspinsym/WJ/jednaBariera/myfree_0.5000_mxfree_-0.8660_VProfileType_0_Voltage_0.0800_/jednaBariera.odt",
-			"0.12V":"/net/archive/groups/plggspinsym/WJ/jednaBariera/myfree_0.5000_mxfree_-0.8660_VProfileType_0_Voltage_0.1200_/jednaBariera.odt",
-			"0.16V":"/net/archive/groups/plggspinsym/WJ/jednaBariera/myfree_0.5000_mxfree_-0.8660_VProfileType_0_Voltage_0.1600_/jednaBariera.odt"
 		}
 	}
 }
